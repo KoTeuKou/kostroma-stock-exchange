@@ -1,0 +1,10 @@
+dependencies {
+    implementation project(':me')
+    implementation project(':fixoe')
+
+    implementation 'com.typesafe.akka:akka-actor_2.12:2.5.23'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'org.slf4j:slf4j-log4j12:1.7.25'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}

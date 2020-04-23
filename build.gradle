@@ -1,0 +1,14 @@
+allprojects {
+    apply plugin: 'java'
+
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+
+    group = 'com.exactprosystems.kse'
+    version = "1.0"
+
+    sourceCompatibility = 11 //Java version compatibility to use when compiling Java source.
+    targetCompatibility = 11 //Java version to generate classes for.
+}
