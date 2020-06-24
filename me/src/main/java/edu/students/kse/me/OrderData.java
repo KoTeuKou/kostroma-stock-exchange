@@ -3,6 +3,7 @@ package edu.students.kse.me;
 import edu.students.kse.me.enums.OrderSide;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class OrderData {
 
@@ -18,7 +19,7 @@ public class OrderData {
     private BigDecimal leavesQty;
 
     // order owner
-    private long userId;
+    private String userId;
 
     // unique order identifier
     private String orderId;
@@ -27,7 +28,7 @@ public class OrderData {
 
     private BigDecimal price;
 
-    public OrderData(long instrumentId, long transactionId, BigDecimal qty, BigDecimal leavesQty, long userId, String orderId, OrderSide side, BigDecimal price) {
+    public OrderData(long instrumentId, long transactionId, BigDecimal qty, BigDecimal leavesQty, String userId, String orderId, OrderSide side, BigDecimal price) {
         this.instrumentId = instrumentId;
         this.transactionId = transactionId;
         this.qty = qty;
@@ -66,11 +67,11 @@ public class OrderData {
         this.leavesQty = leavesQty;
     }
 
-    public long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -99,17 +100,36 @@ public class OrderData {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OrderData)) return false;
+        OrderData orderData = (OrderData) o;
+        return instrumentId == orderData.instrumentId &&
+                transactionId == orderData.transactionId &&
+                Objects.equals(userId, orderData.userId) &&
+                Objects.equals(qty, orderData.qty) &&
+                Objects.equals(leavesQty, orderData.leavesQty) &&
+                Objects.equals(orderId, orderData.orderId) &&
+                side == orderData.side &&
+                Objects.equals(price, orderData.price);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(instrumentId, transactionId, qty, leavesQty, userId, orderId, side, price);
+    }
+
+    @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("OrderData{");
-        sb.append("instrumentId=").append(instrumentId);
-        sb.append(", transactionId=").append(transactionId);
-        sb.append(", qty=").append(qty);
-        sb.append(", leavesQty=").append(leavesQty);
-        sb.append(", userId=").append(userId);
-        sb.append(", orderId='").append(orderId).append('\'');
-        sb.append(", side=").append(side);
-        sb.append(", price=").append(price);
-        sb.append('}');
-        return sb.toString();
+        return "OrderData{" +
+                "instrumentId=" + instrumentId +
+                ", transactionId=" + transactionId +
+                ", qty=" + qty +
+                ", leavesQty=" + leavesQty +
+                ", userId=" + userId +
+                ", orderId='" + orderId + '\'' +
+                ", side=" + side +
+                ", price=" + price +
+                '}';
     }
 }

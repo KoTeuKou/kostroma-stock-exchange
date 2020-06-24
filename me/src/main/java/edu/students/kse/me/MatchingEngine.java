@@ -1,14 +1,7 @@
 package edu.students.kse.me;
-
-
 import akka.actor.AbstractLoggingActor;
 import akka.actor.ActorRef;
-import com.exactpro.kse.me.messages.*;
-import edu.students.kse.me.messages.MEExecutionReport;
-import edu.students.kse.me.messages.MENewOrderMessage;
-import edu.students.kse.me.messages.MESubscribeMessage;
-import edu.students.kse.me.messages.METimeMessage;
-import edu.students.kse.me.messages.TransactionComplete;
+import edu.students.kse.me.messages.*;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -31,6 +24,7 @@ public class MatchingEngine extends AbstractLoggingActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
+                .match(MECancelMessage.class, this::process)
                 .match(MENewOrderMessage.class, this::process)
                 .match(METimeMessage.class, this::process)
                 .match(MESubscribeMessage.class, this::process)
@@ -41,10 +35,18 @@ public class MatchingEngine extends AbstractLoggingActor {
     }
 
 
-    private void process(MENewOrderMessage msg) {
+    private void process(MEInputMessage msg) {
         TransactionBuilder collector = newTransaction();
-        MEOrderBook book = bookStorage.getOrCreateOrderBook(msg.getInstrId());
-        book.process(msg, collector);
+        if (msg instanceof MENewOrderMessage) {
+            MENewOrderMessage orderMessage = (MENewOrderMessage) msg;
+            MEOrderBook book = bookStorage.getOrCreateOrderBook(orderMessage.getInstrId());
+            book.process(orderMessage, collector);
+        }
+        else {
+            MECancelMessage cancelMessage = (MECancelMessage) msg;
+            MEOrderBook book = bookStorage.getOrCreateOrderBook(cancelMessage.getInstrId());
+            book.process(cancelMessage, collector);
+        }
 
         publishTransaction(collector);
     }

@@ -21,7 +21,6 @@ public class Application {
         ActorSystem system = ActorSystem.create("kse");
         ActorRef meRef = system.actorOf(Props.create(MatchingEngine.class));
         ActorRef fixRef = system.actorOf(Props.create(FixServerActor.class, meRef));
-
         logger.info("Application is running");
 
         Await.ready(system.whenTerminated(), Duration.apply(1, TimeUnit.DAYS));

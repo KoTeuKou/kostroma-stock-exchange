@@ -1,0 +1,126 @@
+INFO main 24 июн. 2020 21:17:48,969 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:17:50,605 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:17:50,611 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:17:50,861 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:17:50,862 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:17:50,862 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:17:50,885 quickfix.SocketAcceptor - Listening for connections at localhost/127.0.0.1:6666 for session(s) []
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:17:50,888 edu.students.kse.fixoe.FixApplication - FIX acceptor started
+INFO QFJ Message Processor 24 июн. 2020 21:17:50,888 quickfix.SocketAcceptor - Started QFJ Message Processor
+INFO main 24 июн. 2020 21:19:38,576 edu.students.kse.starter.Application - ME: akka://kse/user/$a
+INFO main 24 июн. 2020 21:19:38,578 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:19:40,111 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:19:40,116 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:19:40,360 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:19:40,360 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:19:40,360 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+ERROR kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:19:40,377 quickfix.SocketAcceptor - Cannot start acceptor session for localhost/127.0.0.1:6666, error: {}
+java.io.IOException: Error while binding on localhost/127.0.0.1:6666
+original message : Address already in use: bind
+	at org.apache.mina.transport.socket.nio.NioSocketAcceptor.open(NioSocketAcceptor.java:257)
+	at org.apache.mina.transport.socket.nio.NioSocketAcceptor.open(NioSocketAcceptor.java:50)
+	at org.apache.mina.core.polling.AbstractPollingIoAcceptor$Acceptor.registerHandles(AbstractPollingIoAcceptor.java:591)
+	at org.apache.mina.core.polling.AbstractPollingIoAcceptor$Acceptor.run(AbstractPollingIoAcceptor.java:460)
+	at org.apache.mina.util.NamePreservingRunnable.run(NamePreservingRunnable.java:64)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+INFO main 24 июн. 2020 21:25:01,571 edu.students.kse.starter.Application - ME: akka://kse/user/$a
+INFO main 24 июн. 2020 21:25:01,573 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:25:03,162 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:25:03,168 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:25:03,405 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:25:03,406 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:25:03,406 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:25:03,422 quickfix.SocketAcceptor - Listening for connections at localhost/127.0.0.1:6666 for session(s) []
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:25:03,425 edu.students.kse.fixoe.FixApplication - FIX acceptor started
+INFO QFJ Message Processor 24 июн. 2020 21:25:03,425 quickfix.SocketAcceptor - Started QFJ Message Processor
+INFO main 24 июн. 2020 21:26:57,103 edu.students.kse.starter.Application - ME: akka://kse/user/$a
+INFO main 24 июн. 2020 21:26:57,104 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:26:58,708 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:26:58,713 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:26:58,967 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:26:58,967 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:26:58,967 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:26:58,986 quickfix.SocketAcceptor - Listening for connections at localhost/127.0.0.1:6666 for session(s) []
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:26:58,989 edu.students.kse.fixoe.FixApplication - FIX acceptor started
+INFO QFJ Message Processor 24 июн. 2020 21:26:58,989 quickfix.SocketAcceptor - Started QFJ Message Processor
+INFO main 24 июн. 2020 21:27:36,392 edu.students.kse.starter.Application - ME: akka://kse/user/$a
+INFO main 24 июн. 2020 21:27:36,393 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:37,964 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:37,971 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:38,201 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:38,201 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:38,201 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+ERROR kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:38,217 quickfix.SocketAcceptor - Cannot start acceptor session for localhost/127.0.0.1:6666, error: {}
+java.io.IOException: Error while binding on localhost/127.0.0.1:6666
+original message : Address already in use: bind
+	at org.apache.mina.transport.socket.nio.NioSocketAcceptor.open(NioSocketAcceptor.java:257)
+	at org.apache.mina.transport.socket.nio.NioSocketAcceptor.open(NioSocketAcceptor.java:50)
+	at org.apache.mina.core.polling.AbstractPollingIoAcceptor$Acceptor.registerHandles(AbstractPollingIoAcceptor.java:591)
+	at org.apache.mina.core.polling.AbstractPollingIoAcceptor$Acceptor.run(AbstractPollingIoAcceptor.java:460)
+	at org.apache.mina.util.NamePreservingRunnable.run(NamePreservingRunnable.java:64)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+INFO main 24 июн. 2020 21:27:52,728 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:54,369 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:54,375 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:54,628 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:54,628 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:54,628 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+ERROR kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:27:54,649 quickfix.SocketAcceptor - Cannot start acceptor session for localhost/127.0.0.1:6666, error: {}
+java.io.IOException: Error while binding on localhost/127.0.0.1:6666
+original message : Address already in use: bind
+	at org.apache.mina.transport.socket.nio.NioSocketAcceptor.open(NioSocketAcceptor.java:257)
+	at org.apache.mina.transport.socket.nio.NioSocketAcceptor.open(NioSocketAcceptor.java:50)
+	at org.apache.mina.core.polling.AbstractPollingIoAcceptor$Acceptor.registerHandles(AbstractPollingIoAcceptor.java:591)
+	at org.apache.mina.core.polling.AbstractPollingIoAcceptor$Acceptor.run(AbstractPollingIoAcceptor.java:460)
+	at org.apache.mina.util.NamePreservingRunnable.run(NamePreservingRunnable.java:64)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+INFO main 24 июн. 2020 21:28:12,926 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:28:14,518 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:28:14,524 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:28:14,759 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:28:14,759 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:28:14,760 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:28:14,776 quickfix.SocketAcceptor - Listening for connections at localhost/127.0.0.1:6666 for session(s) []
+INFO kse-akka.actor.default-dispatcher-2 24 июн. 2020 21:28:14,778 edu.students.kse.fixoe.FixApplication - FIX acceptor started
+INFO QFJ Message Processor 24 июн. 2020 21:28:14,779 quickfix.SocketAcceptor - Started QFJ Message Processor
+INFO main 24 июн. 2020 21:29:23,758 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:29:25,346 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:29:25,352 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:29:25,591 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:29:25,591 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:29:25,591 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:29:25,609 quickfix.SocketAcceptor - Listening for connections at localhost/127.0.0.1:6666 for session(s) []
+INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 21:29:25,611 edu.students.kse.fixoe.FixApplication - FIX acceptor started
+INFO QFJ Message Processor 24 июн. 2020 21:29:25,612 quickfix.SocketAcceptor - Started QFJ Message Processor
+INFO main 24 июн. 2020 21:31:46,456 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:31:48,248 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:31:48,254 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:31:48,482 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:31:48,482 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:31:48,482 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+ERROR kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:31:48,499 quickfix.SocketAcceptor - Cannot start acceptor session for localhost/127.0.0.1:6666, error: {}
+java.io.IOException: Error while binding on localhost/127.0.0.1:6666
+original message : Address already in use: bind
+	at org.apache.mina.transport.socket.nio.NioSocketAcceptor.open(NioSocketAcceptor.java:257)
+	at org.apache.mina.transport.socket.nio.NioSocketAcceptor.open(NioSocketAcceptor.java:50)
+	at org.apache.mina.core.polling.AbstractPollingIoAcceptor$Acceptor.registerHandles(AbstractPollingIoAcceptor.java:591)
+	at org.apache.mina.core.polling.AbstractPollingIoAcceptor$Acceptor.run(AbstractPollingIoAcceptor.java:460)
+	at org.apache.mina.util.NamePreservingRunnable.run(NamePreservingRunnable.java:64)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+INFO main 24 июн. 2020 21:32:28,283 edu.students.kse.starter.Application - Application is running
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:32:29,819 edu.students.kse.fixoe.FixApplication - FIX Server initialized
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:32:29,825 quickfix.SocketAcceptor - SessionTimer started
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:32:30,063 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:32:30,063 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:32:30,063 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:32:30,079 quickfix.SocketAcceptor - Listening for connections at localhost/127.0.0.1:6666 for session(s) []
+INFO kse-akka.actor.default-dispatcher-3 24 июн. 2020 21:32:30,081 edu.students.kse.fixoe.FixApplication - FIX acceptor started
+INFO QFJ Message Processor 24 июн. 2020 21:32:30,082 quickfix.SocketAcceptor - Started QFJ Message Processor

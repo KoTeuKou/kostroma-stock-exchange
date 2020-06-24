@@ -39,7 +39,6 @@ public class FixServerActor extends AbstractLoggingActor {
             log().error(msg);
             throw new FileNotFoundException(msg);
         }
-
         app = new FixApplication(getSelf(), resource.openStream());
         app.start();
 
