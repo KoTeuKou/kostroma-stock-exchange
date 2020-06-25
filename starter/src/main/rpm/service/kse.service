@@ -1,0 +1,14 @@
+[Unit]
+Description=KSE
+
+[Service]
+WorkingDirectory=/opt/kse
+Environment=CONFIG_DIR=/opt/kse/conf
+ExecStart=/bin/java -Xms128m -Xmx256m -jar lib/starter-1.0.jar
+User=kse
+Type=simple
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

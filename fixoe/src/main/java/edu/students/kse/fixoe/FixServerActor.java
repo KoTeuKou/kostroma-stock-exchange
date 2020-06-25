@@ -6,10 +6,15 @@ import edu.students.kse.me.messages.MENewOrderMessage;
 import edu.students.kse.me.messages.MEOutputMessage;
 import edu.students.kse.me.messages.MESubscribeMessage;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.net.URL;
 
 public class FixServerActor extends AbstractLoggingActor {
+
+    private final String CONFIG_DIR = "CONFIG_DIR";
 
     private final ActorRef meRef;
     private FixApplication app;
@@ -33,14 +38,23 @@ public class FixServerActor extends AbstractLoggingActor {
     public void preStart() throws Exception {
         super.preStart();
 
-        URL resource = FixApplication.class.getClassLoader().getResource("config.cfg");
-        if (resource == null) {
-            String msg = "Config cannot be loaded";
-            log().error(msg);
-            throw new FileNotFoundException(msg);
+        String dir = System.getenv(CONFIG_DIR);
+        InputStream is = null;
+        if (dir == null) {
+            URL resource = FixApplication.class.getClassLoader().getResource("config.cfg");
+            if (resource == null) {
+                String msg = "Config cannot be loaded";
+                log().error(msg);
+                throw new FileNotFoundException(msg);
+            }
+            is = resource.openStream();
+        } else {
+            is = new FileInputStream(dir + File.separator + "config.cfg");
         }
 
-        app = new FixApplication(getSelf(), resource.openStream());
+
+
+        app = new FixApplication(getSelf(), is);
         app.start();
 
         // subscribe to ME
