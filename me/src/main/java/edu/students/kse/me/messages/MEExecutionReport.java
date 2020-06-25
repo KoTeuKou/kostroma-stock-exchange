@@ -1,5 +1,8 @@
 package edu.students.kse.me.messages;
 
+import edu.students.kse.me.enums.ExecType;
+import edu.students.kse.me.enums.OrderStatus;
+
 import java.math.BigDecimal;
 import java.util.Objects;
 
@@ -13,15 +16,19 @@ public class MEExecutionReport extends MEOutputMessage {
 
     private final String orderId;
 
-    private final char execType;
+    private final ExecType execType;
 
-    private final char orderStatus;
+    private final OrderStatus orderStatus;
 
     private final BigDecimal price;
 
-    private final BigDecimal leavesQty;
+    private final BigDecimal qty;
 
-    public MEExecutionReport(String execId, String clientId, String clientOrderId, String orderId, char execType, char orderStatus, BigDecimal price, BigDecimal leavesQty) {
+    private final BigDecimal executedPrice;
+
+    private final BigDecimal executedQty;
+
+    public MEExecutionReport(String execId, String clientId, String clientOrderId, String orderId, ExecType execType, OrderStatus orderStatus, BigDecimal price, BigDecimal qty, BigDecimal executedPrice, BigDecimal executedQty) {
         this.execId = execId;
         this.clientId = clientId;
         this.clientOrderId = clientOrderId;
@@ -29,7 +36,9 @@ public class MEExecutionReport extends MEOutputMessage {
         this.execType = execType;
         this.orderStatus = orderStatus;
         this.price = price;
-        this.leavesQty = leavesQty;
+        this.qty = qty;
+        this.executedPrice = executedPrice;
+        this.executedQty = executedQty;
     }
 
     public String getExecId() {
@@ -48,20 +57,28 @@ public class MEExecutionReport extends MEOutputMessage {
         return orderId;
     }
 
-    public char getExecType() {
+    public ExecType getExecType() {
         return execType;
     }
 
-    public char getOrderStatus() {
+    public OrderStatus getOrderStatus() {
         return orderStatus;
+    }
+
+    public BigDecimal getExecutedPrice() {
+        return executedPrice;
+    }
+
+    public BigDecimal getExecutedQty() {
+        return executedQty;
     }
 
     public BigDecimal getPrice() {
         return price;
     }
 
-    public BigDecimal getLeavesQty() {
-        return leavesQty;
+    public BigDecimal getQty() {
+        return qty;
     }
 
     @Override
@@ -69,19 +86,21 @@ public class MEExecutionReport extends MEOutputMessage {
         if (this == o) return true;
         if (!(o instanceof MEExecutionReport)) return false;
         MEExecutionReport that = (MEExecutionReport) o;
-        return execType == that.execType &&
-                orderStatus == that.orderStatus &&
-                Objects.equals(execId, that.execId) &&
+        return Objects.equals(execId, that.execId) &&
                 Objects.equals(clientId, that.clientId) &&
                 Objects.equals(clientOrderId, that.clientOrderId) &&
                 Objects.equals(orderId, that.orderId) &&
+                execType == that.execType &&
+                orderStatus == that.orderStatus &&
                 Objects.equals(price, that.price) &&
-                Objects.equals(leavesQty, that.leavesQty);
+                Objects.equals(qty, that.qty) &&
+                Objects.equals(executedPrice, that.executedPrice) &&
+                Objects.equals(executedQty, that.executedQty);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(execId, clientId, clientOrderId, orderId, execType, orderStatus, price, leavesQty);
+        return Objects.hash(execId, clientId, clientOrderId, orderId, execType, orderStatus, price, qty, executedPrice, executedQty);
     }
 
     @Override
@@ -94,7 +113,9 @@ public class MEExecutionReport extends MEOutputMessage {
                 ", execType=" + execType +
                 ", orderStatus=" + orderStatus +
                 ", price=" + price +
-                ", leavesQty=" + leavesQty +
+                ", qty=" + qty +
+                ", executedPrice=" + executedPrice +
+                ", executedQty=" + executedQty +
                 '}';
     }
 }

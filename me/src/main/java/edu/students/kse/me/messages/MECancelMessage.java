@@ -1,5 +1,7 @@
 package edu.students.kse.me.messages;
 
+import edu.students.kse.me.enums.OrderSide;
+
 import java.util.Objects;
 
 public class MECancelMessage extends MEInputMessage  {
@@ -14,9 +16,9 @@ public class MECancelMessage extends MEInputMessage  {
 
     private final long instrId;
 
-    private final byte side;
+    private final OrderSide side;
 
-    public MECancelMessage(String clientOrderId, String clientId, String originalClientOrderId, String orderId, long instrId, byte side) {
+    public MECancelMessage(String clientOrderId, String clientId, String originalClientOrderId, String orderId, long instrId, OrderSide side) {
         this.clientOrderId = clientOrderId;
         this.clientId = clientId;
         this.originalClientOrderId = originalClientOrderId;
@@ -45,7 +47,7 @@ public class MECancelMessage extends MEInputMessage  {
         return instrId;
     }
 
-    public byte getSide() {
+    public OrderSide getSide() {
         return side;
     }
 
@@ -55,11 +57,11 @@ public class MECancelMessage extends MEInputMessage  {
         if (!(o instanceof MECancelMessage)) return false;
         MECancelMessage that = (MECancelMessage) o;
         return instrId == that.instrId &&
-                side == that.side &&
                 Objects.equals(clientOrderId, that.clientOrderId) &&
                 Objects.equals(clientId, that.clientId) &&
                 Objects.equals(originalClientOrderId, that.originalClientOrderId) &&
-                Objects.equals(orderId, that.orderId);
+                Objects.equals(orderId, that.orderId) &&
+                side == that.side;
     }
 
     @Override

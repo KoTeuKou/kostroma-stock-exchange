@@ -1,9 +1,8 @@
 package edu.students.kse.me;
 
-import edu.students.kse.me.enums.OrderSide;
+import edu.students.kse.me.enums.*;
 import edu.students.kse.me.messages.MECancelMessage;
 import edu.students.kse.me.messages.MEExecutionReport;
-import edu.students.kse.me.messages.MEInputMessage;
 import edu.students.kse.me.messages.MENewOrderMessage;
 
 import java.math.BigDecimal;
@@ -18,211 +17,238 @@ public class MEOrderBook {
     private final ArrayList<OrderData> offers = new ArrayList<>();
     private final ArrayList<MENewOrderMessage> stoppedLimitOffers = new ArrayList<>();
     private final ArrayList<MENewOrderMessage> stoppedLimitBids = new ArrayList<>();
+    private final MEIdGenerator generator;
 
 
-    public MEOrderBook(long instrumentId) {
+    public MEOrderBook(long instrumentId, MEIdGenerator generator) {
         this.instrumentId = instrumentId;
+        this.generator = generator;
     }
 
-    public void process(MEInputMessage inputMessage, TransactionBuilder collector) {
-        //FIXME: Replace empty strings and 0 values
-        //TODO: Use TIF field
-        MENewOrderMessage msg = null;
-        if (inputMessage instanceof MENewOrderMessage) {
-            msg = (MENewOrderMessage) inputMessage;
-        }
-        else if (inputMessage instanceof MECancelMessage){
-            MECancelMessage cancelMessage = (MECancelMessage) inputMessage;
-            if (cancelMessage.getSide() == 1) {
-                removeOrderByCancelMessage(collector, cancelMessage, bids);
-            }
-            else {
-                removeOrderByCancelMessage(collector, cancelMessage, offers);
-            }
+    public void process(MECancelMessage meCancelMessage, TransactionBuilder collector){
+        if (meCancelMessage.getSide() == OrderSide.BID) {
+            removeOrderByCancelMessage(collector, meCancelMessage);
         }
         else {
-            throw new IllegalArgumentException();
+            removeOrderByCancelMessage(collector, meCancelMessage);
         }
+    }
 
-        if (msg != null) {
-            // Validation check
-            if (isValid(msg)) {
-                collector.add(new MEExecutionReport("", msg.getClientId(), msg.getClientOrderId(), msg.getRequestId(),
-                        '0', '0', msg.getLimitPrice(), msg.getOrderQty()));
+
+    public void process(MENewOrderMessage newOrderMessage, TransactionBuilder collector) {
+
+            if (!isValid(newOrderMessage)) {
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), newOrderMessage.getClientId(),
+                        newOrderMessage.getClientOrderId(), newOrderMessage.getOrderId(), ExecType.REJECTED,
+                        OrderStatus.REJECTED, newOrderMessage.getLimitPrice(), newOrderMessage.getOrderQty(), null, null));
+            }
+            else{
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), newOrderMessage.getClientId(),
+                        newOrderMessage.getClientOrderId(), newOrderMessage.getOrderId(), ExecType.NEW, OrderStatus.NEW,
+                        newOrderMessage.getLimitPrice(), newOrderMessage.getOrderQty(), null, null));
                 // If it stop limit order add it to list till stop price will be suitable
-                if (msg.getOrderType() == 4) {
-                    if (msg.getSide() == 1)
-                        stoppedLimitBids.add(msg);
+                if (newOrderMessage.getOrderType() == OrderType.STOP_LIMIT) {
+                    if (newOrderMessage.getSide() == OrderSide.BID)
+                        stoppedLimitBids.add(newOrderMessage);
                     else
-                        stoppedLimitOffers.add(msg);
+                        stoppedLimitOffers.add(newOrderMessage);
                 } else {
                     // Check for Stop Limit orders that can be added to Limit orders
                     List<MENewOrderMessage> orderMessages = new ArrayList<>();
-                    if (offers.size() != 0 && stoppedLimitOffers.size() != 0) {
+                    if (!offers.isEmpty() && !stoppedLimitOffers.isEmpty()) {
                         BigDecimal borderPriceForOffers = offers.stream().min(Comparator.comparing(OrderData::getPrice)).get().getPrice();
                         orderMessages = stoppedLimitOffers.stream()
-                                .filter(meNewOrderMessage -> meNewOrderMessage.getStopPrice().compareTo(borderPriceForOffers) >= 0).collect(Collectors.toList());
+                                .filter(meNewOrderMessage -> meNewOrderMessage.getStopPrice().compareTo(borderPriceForOffers) >= 0)
+                                .collect(Collectors.toList());
                     }
-                    if (bids.size() != 0  && stoppedLimitBids.size() != 0) {
+                    if (!bids.isEmpty()  && !stoppedLimitBids.isEmpty()) {
                         BigDecimal borderPriceForBids = bids.stream().min(Comparator.comparing(OrderData::getPrice)).get().getPrice();
                         orderMessages.addAll(stoppedLimitBids.stream()
-                                .filter(meNewOrderMessage -> meNewOrderMessage.getStopPrice().compareTo(borderPriceForBids) >= 0).collect(Collectors.toList()));
+                                .filter(meNewOrderMessage -> meNewOrderMessage.getStopPrice().compareTo(borderPriceForBids) >= 0)
+                                .collect(Collectors.toList()));
                     }
-                    orderMessages.add(msg);
+                    orderMessages.add(newOrderMessage);
                     for (MENewOrderMessage message : orderMessages) {
                         BigDecimal limitPrice = message.getLimitPrice();
                         OrderData tempOrderData = null;
-                        byte orderType = message.getOrderType();
+                        OrderType orderType = message.getOrderType();
+                        OrderTimeQualifier orderTimeQualifier = message.getTif();
 
                         switch (message.getSide()) {
                             // Buy
-                            case 1:
-                                    OrderData incomingBuyOrder = new OrderData(message.getInstrId(), 0L, message.getOrderQty(), message.getDisplayQty(),
-                                            message.getClientId(), message.getClientOrderId(), OrderSide.BID, message.getLimitPrice());
-                                    List<OrderData> offersList = offers.stream()
-                                            .sorted(Comparator.comparing(OrderData::getPrice)).collect(Collectors.toList());
+                            case BID:
+                                OrderData incomingBuyOrder = new OrderData(message.getInstrId(), generator.getNextTransactionId(), message.getClientId(),
+                                        message.getClientOrderId(), message.getOrderId(), OrderSide.BID, message.getLimitPrice(),
+                                        message.getOrderQty(), message.getDisplayQty());
+                                // transactionId acts as time counter
+                                List<OrderData> offersList = offers.stream()
+                                        .sorted(Comparator.comparing(OrderData::getPriceForUnit).thenComparing(OrderData::getTransactionId)).collect(Collectors.toList());
 
-                                    // Find suitable offer
-                                    if (offersList.size() != 0)
-                                        tempOrderData = findSuitablePair(limitPrice, orderType, incomingBuyOrder, offersList);
+                                if (!offersList.isEmpty())
+                                    tempOrderData = findSuitablePair(limitPrice, orderType, incomingBuyOrder, offersList, orderTimeQualifier);
 
-                                    if (orderType != 4)
-                                        generateReportsForOrders(collector, tempOrderData, incomingBuyOrder, offers, bids, orderType);
+                                if (orderType != OrderType.STOP_LIMIT)
+                                    generateReportsForOrders(collector, tempOrderData, incomingBuyOrder, orderType);
 
                                 break;
 
                             // Sell
-                            case 2:
+                            case OFFER:
+                                OrderData incomingSellOrder = new OrderData(message.getInstrId(), generator.getNextTransactionId(), message.getClientId(),
+                                        message.getClientOrderId(), message.getOrderId(), OrderSide.OFFER, message.getLimitPrice(),
+                                        message.getOrderQty(), message.getDisplayQty());
 
-                                    OrderData incomingSellOrder = new OrderData(message.getInstrId(), 0L, message.getOrderQty(), message.getDisplayQty(),
-                                            message.getClientId(), message.getClientOrderId(), OrderSide.OFFER, message.getLimitPrice());
+                                List<OrderData> bidsList = bids.stream()
+                                        .sorted(Comparator.comparing(OrderData::getPriceForUnit).reversed().thenComparing(OrderData::getTransactionId)).collect(Collectors.toList());
 
-                                    List<OrderData> bidsList = bids.stream()
-                                            .sorted(Comparator.comparing(OrderData::getPrice).reversed()).collect(Collectors.toList());
-                                    // Find suitable buyer
-                                    if (bidsList.size() != 0)
-                                        tempOrderData = findSuitablePair(limitPrice, orderType, incomingSellOrder, bidsList);
-                                    // If such offer exists
-                                    if (orderType != 4)
-                                        generateReportsForOrders(collector, tempOrderData, incomingSellOrder, bids, offers, orderType);
+                                if (!bidsList.isEmpty())
+                                    tempOrderData = findSuitablePair(limitPrice, orderType, incomingSellOrder, bidsList, orderTimeQualifier);
+
+                                if (orderType != OrderType.STOP_LIMIT)
+                                    generateReportsForOrders(collector, tempOrderData, incomingSellOrder, orderType);
 
                                 break;
                         }
                     }
                 }
             }
-            else{
-                collector.add(new MEExecutionReport("", msg.getClientId(), msg.getClientOrderId(), msg.getRequestId(),
-                        '8', '8', msg.getLimitPrice(), msg.getOrderQty()));
+    }
+
+    private void removeOrderByCancelMessage(TransactionBuilder collector, MECancelMessage cancelMessage) {
+        OrderData reqOrderData;
+        if (cancelMessage.getSide() == OrderSide.BID){
+            reqOrderData = bids.stream()
+                    .filter(orderData -> orderData.getClientOrderId().equals(cancelMessage.getOriginalClientOrderId()))
+                    .findFirst().orElse(null);
+        }
+        else {
+            reqOrderData = offers.stream()
+                    .filter(orderData -> orderData.getClientOrderId().equals(cancelMessage.getOriginalClientOrderId()))
+                    .findFirst().orElse(null);
+        }
+        // If such order has been found => remove from book & create report
+        if (reqOrderData != null) {
+            if (cancelMessage.getSide() == OrderSide.BID) {
+                bids.remove(reqOrderData);
+            }
+            else {
+                offers.remove(reqOrderData);
+            }
+            collector.add(new MEExecutionReport(generator.getNextExecutionId(), cancelMessage.getClientId(), cancelMessage.getClientOrderId(),
+                    reqOrderData.getOrderId(), ExecType.CANCELLED, OrderStatus.CANCELLED, reqOrderData.getPrice(), reqOrderData.getQty(), null, null));
+        }
+        // If orderId was incorrect or doesnt' exist
+        else {
+            collector.add(new MEExecutionReport(generator.getNextExecutionId(), cancelMessage.getClientId(), cancelMessage.getClientOrderId(),
+                    cancelMessage.getOrderId(), ExecType.REJECTED, OrderStatus.REJECTED, null, null, null, null));
+        }
+    }
+
+    private OrderData findSuitablePair(BigDecimal limitPrice, OrderType orderType, OrderData incomingOrder, List<OrderData> ordersList, OrderTimeQualifier tif) {
+        Optional<OrderData> suitableOrder;
+
+        if (orderType == OrderType.STOP) {
+
+            if (incomingOrder.getSide().equals(OrderSide.BID)) {
+                suitableOrder = ordersList.stream()
+                        .filter(orderData -> orderData.getPrice().compareTo(limitPrice) >= 0 &&
+                                orderData.getQty().compareTo(incomingOrder.getQty()) >= 0)
+                        .findFirst();
+            }
+
+            else {
+                suitableOrder = ordersList.stream()
+                        .filter(orderData -> orderData.getPrice().compareTo(limitPrice) >= 0 &&
+                                orderData.getQty().compareTo(incomingOrder.getQty()) >= 0)
+                        .findFirst();
             }
         }
 
-        // orderType
-        //        1 - Market
-        //        2 - Limit
-        //        3 - Stop
-        //        4 - Stop Limit
-
-        // execType
-        //        0 - New
-        //        4 - Cancelled
-        //        8 - Rejected
-        //        F - Trade
-
-        // status
-        //        0 - New
-        //        1 - Partially filled
-        //        2 - Filled
-        //        4 - Cancelled
-        //        8 - Rejected
-
-        // tif
-        //      1 - Good Till Cancel
-        //      3 - Immediate or Cancel (IOC)
-        //      4 - Fill or Kill (FOK)
-    }
-
-    private void removeOrderByCancelMessage(TransactionBuilder collector, MECancelMessage cancelMessage, ArrayList<OrderData> offers) {
-        OrderData reqOrderData;
-        reqOrderData = offers.stream()
-                .filter(orderData -> orderData.getOrderId().equals(cancelMessage.getOriginalClientOrderId()))
-                .findFirst().orElse(null);
-        if (reqOrderData != null) {
-            offers.remove(reqOrderData);
-            collector.add(new MEExecutionReport("", cancelMessage.getClientId(), cancelMessage.getClientOrderId(),
-                    cancelMessage.getOrderId(), '4', '4', reqOrderData.getPrice(), reqOrderData.getQty()));
-        }
+        // For Market order
         else {
-            collector.add(new MEExecutionReport("", cancelMessage.getClientId(), cancelMessage.getClientOrderId(),
-                    cancelMessage.getOrderId(), '8', '8', null, null));
-        }
-    }
 
-    private OrderData findSuitablePair(BigDecimal limitPrice, byte orderType, OrderData incomingOrder, List<OrderData> offersList) {
-        Optional<OrderData> suitableOrder;
-        // For Stop order
-        if (orderType == 3) {
-            suitableOrder = offersList.stream()
-                    .filter(orderData -> orderData.getPrice().compareTo(limitPrice) >= 0 &&
-                            orderData.getQty().compareTo(incomingOrder.getQty()) >= 0)
-                    .findFirst();
-        }
-        // For other orders
-        else {
-            suitableOrder = offersList.stream()
-                    .filter(orderData -> orderData.getPrice().compareTo(limitPrice) <= 0 &&
-                            orderData.getQty().compareTo(incomingOrder.getQty()) >= 0)
-                    .findFirst();
+                if (orderType == OrderType.LIMIT && tif == OrderTimeQualifier.FILL_OR_KILL){
+                    suitableOrder = ordersList.stream()
+                            .filter(orderData -> orderData.getPrice().compareTo(limitPrice) <= 0 &&
+                                    orderData.getQty().compareTo(incomingOrder.getQty()) >= 0)
+                            .findFirst();
+                }
+                else {
+                    suitableOrder = ordersList.stream()
+                            .filter(orderData -> orderData.getPrice().compareTo(limitPrice) <= 0)
+                            .findFirst();
+                }
         }
         return suitableOrder.orElse(null);
     }
 
-    private void generateReportsForOrders(TransactionBuilder collector, OrderData tempOrderData, OrderData incomingOrder,
-                                          ArrayList<OrderData> offers, ArrayList<OrderData> bids, byte orderType) {
-        // If such offer exists
+    private void generateReportsForOrders(TransactionBuilder collector, OrderData tempOrderData, OrderData incomingOrder, OrderType orderType) {
         if (tempOrderData != null) {
-            tempOrderData.setQty(tempOrderData.getQty().subtract(incomingOrder.getQty()));
-            incomingOrder.setQty(incomingOrder.getQty().subtract(tempOrderData.getQty()));
+            BigDecimal incomingQty = incomingOrder.getQty();
+            BigDecimal existedQty = tempOrderData.getQty();
+            tempOrderData.setQty(existedQty.subtract(incomingQty).compareTo(new BigDecimal("0")) > 0?  existedQty.subtract(incomingQty) : new BigDecimal("0"));
+            incomingOrder.setQty(incomingQty.subtract(existedQty).compareTo(new BigDecimal("0")) > 0?  incomingQty.subtract(existedQty) : new BigDecimal("0"));
             // Reports for incoming order
+
             // Filled
-            if (incomingOrder.getQty().compareTo(new BigDecimal("0")) == 0){
-                collector.add(new MEExecutionReport("", "", "", incomingOrder.getOrderId(),
-                        'F', '2', incomingOrder.getPrice(), incomingOrder.getQty()));
+            if (incomingOrder.getQty().compareTo(new BigDecimal("0")) == 0) {
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
+                        incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.TRADE,
+                        OrderStatus.FILLED, incomingOrder.getPrice(), incomingOrder.getQty(), tempOrderData.getPrice(), incomingQty));
             }
             // Partially filled
             else {
-                collector.add(new MEExecutionReport("", "", "", incomingOrder.getOrderId(),
-                        'F', '1', incomingOrder.getPrice(), incomingOrder.getQty()));
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
+                        incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.TRADE,
+                        OrderStatus.PARTIALLY_FILLED,  incomingOrder.getPrice(), incomingOrder.getQty(), tempOrderData.getPrice(), incomingQty.subtract(incomingOrder.getQty())));
             }
             // Reports for existed order
+
             // Filled
             if (tempOrderData.getQty().equals(new BigDecimal("0"))) {
-                offers.remove(tempOrderData);
-                collector.add(new MEExecutionReport("", "", "", tempOrderData.getOrderId(),
-                        'F', '2', tempOrderData.getPrice(), tempOrderData.getQty()));
+                if (tempOrderData.getSide() == OrderSide.BID)
+                    offers.remove(tempOrderData);
+                else
+                    bids.remove(tempOrderData);
+
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), tempOrderData.getClientId(),
+                        tempOrderData.getClientOrderId(), tempOrderData.getOrderId(), ExecType.TRADE,
+                        OrderStatus.FILLED,  tempOrderData.getPrice(), tempOrderData.getQty(), tempOrderData.getPrice(), existedQty));
             }
             // Partially filled
             else if (tempOrderData.getQty().compareTo(limitSize) >= 0) {
-                collector.add(new MEExecutionReport("", "", "", tempOrderData.getOrderId(),
-                        'F', '1', tempOrderData.getPrice(), tempOrderData.getQty()));
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), tempOrderData.getClientId(),
+                        tempOrderData.getClientOrderId(), tempOrderData.getOrderId(), ExecType.TRADE,
+                        OrderStatus.PARTIALLY_FILLED, incomingOrder.getPrice(), incomingOrder.getQty(), tempOrderData.getPrice(), existedQty.subtract(tempOrderData.getQty())));
             }
-            // Cancelled
+            // Cancelled cause not enough qty for trading
             else {
-                offers.remove(tempOrderData);
-                collector.add(new MEExecutionReport("", "", "", tempOrderData.getOrderId(),
-                        '4', '4', tempOrderData.getPrice(), tempOrderData.getQty()));
+                if (tempOrderData.getSide() == OrderSide.BID)
+                    offers.remove(tempOrderData);
+                else
+                    bids.remove(tempOrderData);
+
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), tempOrderData.getClientId(),
+                        tempOrderData.getClientOrderId(), tempOrderData.getOrderId(), ExecType.CANCELLED,
+                        OrderStatus.CANCELLED, tempOrderData.getPrice(), tempOrderData.getQty(),
+                        tempOrderData.getPrice(), tempOrderData.getQty()));
             }
         }
         // No such offer
         else {
-            // If Market order so cancel it
-            if (orderType == 1) {
-                collector.add(new MEExecutionReport("", "", "", incomingOrder.getOrderId(),
-                        '4', '4', incomingOrder.getPrice(), incomingOrder.getQty()));
+
+            if (orderType == OrderType.MARKET) {
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
+                        incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.CANCELLED,
+                        OrderStatus.CANCELLED, incomingOrder.getPrice(), incomingOrder.getQty(), null, null));
             }
-            // Else Limit, Stop, Stop-limit order, so add to book
+
             else {
-                bids.add(incomingOrder);
+                if (incomingOrder.getSide() == OrderSide.BID)
+                    bids.add(incomingOrder);
+                else
+                    offers.add(incomingOrder);
+
             }
         }
     }
@@ -242,13 +268,13 @@ public class MEOrderBook {
     private boolean isValid(MENewOrderMessage msg) {
         if (msg.getOrderQty().compareTo(limitSize) < 0)
             return false;
-        ArrayList<Byte> types = new ArrayList<>(Arrays.asList((byte) 1, (byte) 2, (byte) 3, (byte) 4));
+        ArrayList<OrderType> types = new ArrayList<>(Arrays.asList(OrderType.values()));
         if (!types.contains(msg.getOrderType()))
             return false;
-        ArrayList<Byte> sides = new ArrayList<>(Arrays.asList((byte) 1, (byte) 2));
+        ArrayList<OrderSide> sides = new ArrayList<>(Arrays.asList(OrderSide.values()));
         if (!sides.contains(msg.getSide()))
             return false;
-        ArrayList<Byte> tif = new ArrayList<>(Arrays.asList((byte) 1, (byte) 3, (byte) 4));
+        ArrayList<OrderTimeQualifier> tif = new ArrayList<>(Arrays.asList(OrderTimeQualifier.values()));
         return tif.contains(msg.getTif());
     }
 

@@ -3,6 +3,7 @@ package edu.students.kse.me;
 import edu.students.kse.me.enums.OrderSide;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 public class OrderData {
@@ -12,14 +13,10 @@ public class OrderData {
     // unique id
     private long transactionId;
 
-    // order entry size
-    private BigDecimal qty;
-
-    // leaves qty
-    private BigDecimal leavesQty;
-
     // order owner
-    private String userId;
+    private String clientId;
+
+    private String clientOrderId;
 
     // unique order identifier
     private String orderId;
@@ -28,15 +25,31 @@ public class OrderData {
 
     private BigDecimal price;
 
-    public OrderData(long instrumentId, long transactionId, BigDecimal qty, BigDecimal leavesQty, String userId, String orderId, OrderSide side, BigDecimal price) {
+    // order entry size
+    private BigDecimal qty;
+
+    // leaves qty
+    private BigDecimal leavesQty;
+
+    public OrderData(long instrumentId, long transactionId, String clientId, String clientOrderId, String orderId, OrderSide side, BigDecimal price, BigDecimal qty, BigDecimal leavesQty) {
         this.instrumentId = instrumentId;
         this.transactionId = transactionId;
-        this.qty = qty;
-        this.leavesQty = leavesQty;
-        this.userId = userId;
+        this.clientId = clientId;
+        this.clientOrderId = clientOrderId;
         this.orderId = orderId;
         this.side = side;
         this.price = price;
+        this.qty = qty;
+        this.leavesQty = leavesQty;
+    }
+
+
+    public String getClientOrderId() {
+        return clientOrderId;
+    }
+
+    public void setClientOrderId(String clientOrderId) {
+        this.clientOrderId = clientOrderId;
     }
 
     public long getInstrumentId() {
@@ -67,12 +80,12 @@ public class OrderData {
         this.leavesQty = leavesQty;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public String getOrderId() {
@@ -99,6 +112,8 @@ public class OrderData {
         this.price = price;
     }
 
+    public BigDecimal getPriceForUnit(){return price.divide(qty, RoundingMode.HALF_DOWN);}
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -106,17 +121,18 @@ public class OrderData {
         OrderData orderData = (OrderData) o;
         return instrumentId == orderData.instrumentId &&
                 transactionId == orderData.transactionId &&
-                Objects.equals(userId, orderData.userId) &&
-                Objects.equals(qty, orderData.qty) &&
-                Objects.equals(leavesQty, orderData.leavesQty) &&
+                Objects.equals(clientId, orderData.clientId) &&
+                Objects.equals(clientOrderId, orderData.clientOrderId) &&
                 Objects.equals(orderId, orderData.orderId) &&
                 side == orderData.side &&
-                Objects.equals(price, orderData.price);
+                Objects.equals(price, orderData.price) &&
+                Objects.equals(qty, orderData.qty) &&
+                Objects.equals(leavesQty, orderData.leavesQty);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(instrumentId, transactionId, qty, leavesQty, userId, orderId, side, price);
+        return Objects.hash(instrumentId, transactionId, clientId, clientOrderId, orderId, side, price, qty, leavesQty);
     }
 
     @Override
@@ -124,12 +140,14 @@ public class OrderData {
         return "OrderData{" +
                 "instrumentId=" + instrumentId +
                 ", transactionId=" + transactionId +
-                ", qty=" + qty +
-                ", leavesQty=" + leavesQty +
-                ", userId=" + userId +
+                ", clientId='" + clientId + '\'' +
+                ", clientOrderId='" + clientOrderId + '\'' +
                 ", orderId='" + orderId + '\'' +
                 ", side=" + side +
                 ", price=" + price +
+                ", qty=" + qty +
+                ", leavesQty=" + leavesQty +
                 '}';
     }
+
 }

@@ -15,7 +15,7 @@ public class OrderBookStorage {
 
     public MEOrderBook getOrCreateOrderBook(long instrumentId) {
         return books.computeIfAbsent(instrumentId, (instrId) -> {
-            return new MEOrderBook(instrId);
+            return new MEOrderBook(instrId, generator);
         });
     }
 

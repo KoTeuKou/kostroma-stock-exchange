@@ -4,6 +4,9 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.testkit.javadsl.TestKit;
+import edu.students.kse.me.enums.OrderSide;
+import edu.students.kse.me.enums.OrderTimeQualifier;
+import edu.students.kse.me.enums.OrderType;
 import edu.students.kse.me.messages.*;
 import org.junit.Assert;
 import org.junit.Before;
@@ -38,11 +41,11 @@ public class METest {
         MENewOrderMessage noValidOrder = new MENewOrderMessage(
                 "requestId1",
                 "clientOrderId1",
-                "clientId1",
+                "orderId1", "clientId1",
                 1L,
-                (byte) 1,
-                (byte) 1,
-                (byte) 1,
+                OrderType.MARKET,
+                OrderTimeQualifier.GOOD_TILL_CANCEL,
+                OrderSide.BID,
                 new BigDecimal("1"),
                 new BigDecimal("5000"),
                 new BigDecimal("1000"),
@@ -51,11 +54,11 @@ public class METest {
         MENewOrderMessage marketBuyOrder = new MENewOrderMessage(
                 "requestId2",
                 "clientOrderId2",
-                "clientId2",
+                "orderId2", "clientId2",
                 1L,
-                (byte) 1,
-                (byte) 1,
-                (byte) 1,
+                OrderType.MARKET,
+                OrderTimeQualifier.GOOD_TILL_CANCEL,
+                OrderSide.BID,
                 new BigDecimal("10000"),
                 new BigDecimal("5000"),
                 new BigDecimal("1000"),
@@ -64,11 +67,11 @@ public class METest {
         MENewOrderMessage limitSellOrder = new MENewOrderMessage(
                 "requestId3",
                 "clientOrderId3",
-                "clientId3",
+                "orderId3", "clientId3",
                 1L,
-                (byte) 2,
-                (byte) 1,
-                (byte) 2,
+                OrderType.LIMIT,
+                OrderTimeQualifier.GOOD_TILL_CANCEL,
+                OrderSide.OFFER,
                 new BigDecimal("10000"),
                 new BigDecimal("5000"),
                 new BigDecimal("500"),
@@ -77,23 +80,23 @@ public class METest {
         MENewOrderMessage stopLimitSellOrder = new MENewOrderMessage(
                 "requestId4",
                 "clientOrderId4",
-                "clientId4",
+                "orderId4", "clientId4",
                 1L,
-                (byte) 4,
-                (byte) 1,
-                (byte) 2,
+                OrderType.STOP_LIMIT,
+                OrderTimeQualifier.GOOD_TILL_CANCEL,
+                OrderSide.OFFER,
                 new BigDecimal("10000"),
                 new BigDecimal("5000"),
                 new BigDecimal("1000"),
                 new BigDecimal("500"));
 
         MECancelMessage cancelOrder = new MECancelMessage(
-                "requestId3",
-                "clientOrderId3",
+                "requestId5",
+                "clientOrderId5",
                 "clientOrderId3",
                 "clientOrderId3",
                 1L,
-                (byte) 2);
+                OrderSide.OFFER);
 
         meRef.tell(noValidOrder, probe.getRef());
 
@@ -102,7 +105,7 @@ public class METest {
         Assert.assertEquals(MEExecutionReport.class, msg.getClass());
         MEExecutionReport execReport = (MEExecutionReport) msg;
         TestUtils.assertEquals(noValidOrder.getLimitPrice(), execReport.getPrice());
-        TestUtils.assertEquals(noValidOrder.getOrderQty(), execReport.getLeavesQty());
+        TestUtils.assertEquals(noValidOrder.getOrderQty(), execReport.getQty());
         msg = probe.receiveOne(TIMEOUT);
         Assert.assertEquals(TransactionComplete.class, msg.getClass());
 
