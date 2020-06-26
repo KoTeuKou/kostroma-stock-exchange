@@ -1,9 +1,0 @@
-INFO main 24 июн. 2020 20:06:37,533 edu.students.kse.starter.Application - Application is running
-INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 20:06:39,268 edu.students.kse.fixoe.FixApplication - FIX Server initialized
-INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 20:06:39,274 quickfix.SocketAcceptor - SessionTimer started
-INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 20:06:39,526 quickfix.mina.NetworkingOptions - Socket option: SocketTcpNoDelay=true
-INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 20:06:39,526 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWrites=false
-INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 20:06:39,526 quickfix.mina.NetworkingOptions - Socket option: SocketSynchronousWriteTimeout=30000
-INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 20:06:39,545 quickfix.SocketAcceptor - Listening for connections at localhost/127.0.0.1:6666 for session(s) []
-INFO kse-akka.actor.default-dispatcher-4 24 июн. 2020 20:06:39,547 edu.students.kse.fixoe.FixApplication - FIX acceptor started
-INFO QFJ Message Processor 24 июн. 2020 20:06:39,547 quickfix.SocketAcceptor - Started QFJ Message Processor
