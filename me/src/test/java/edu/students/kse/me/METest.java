@@ -48,7 +48,7 @@ public class METest {
                 OrderSide.BID,
                 new BigDecimal("1"),
                 new BigDecimal("5000"),
-                new BigDecimal("1000"),
+                null,
                 null);
 
         MENewOrderMessage marketBuyOrder = new MENewOrderMessage(
@@ -60,8 +60,8 @@ public class METest {
                 OrderTimeQualifier.GOOD_TILL_CANCEL,
                 OrderSide.BID,
                 new BigDecimal("10000"),
-                new BigDecimal("5000"),
-                new BigDecimal("1000"),
+                new BigDecimal("10000"),
+                null,
                 null);
 
         MENewOrderMessage limitSellOrder = new MENewOrderMessage(
@@ -73,7 +73,7 @@ public class METest {
                 OrderTimeQualifier.GOOD_TILL_CANCEL,
                 OrderSide.OFFER,
                 new BigDecimal("10000"),
-                new BigDecimal("5000"),
+                new BigDecimal("10000"),
                 new BigDecimal("500"),
                 null);
 
@@ -86,9 +86,9 @@ public class METest {
                 OrderTimeQualifier.GOOD_TILL_CANCEL,
                 OrderSide.OFFER,
                 new BigDecimal("10000"),
-                new BigDecimal("5000"),
+                new BigDecimal("10000"),
                 new BigDecimal("1000"),
-                new BigDecimal("500"));
+                new BigDecimal("600"));
 
         MECancelMessage cancelOrder = new MECancelMessage(
                 "requestId5",
@@ -97,6 +97,32 @@ public class METest {
                 "clientOrderId3",
                 1L,
                 OrderSide.OFFER);
+
+        MENewOrderMessage limitBuyOrder = new MENewOrderMessage(
+                "requestId6",
+                "clientOrderId6",
+                "orderId6", "clientId6",
+                1L,
+                OrderType.LIMIT,
+                OrderTimeQualifier.FILL_OR_KILL,
+                OrderSide.BID,
+                new BigDecimal("7000"),
+                new BigDecimal("7000"),
+                new BigDecimal("400"),
+                null);
+
+        MENewOrderMessage limitSellOrder2 = new MENewOrderMessage(
+                "requestId7",
+                "clientOrderId7",
+                "orderId7", "clientId7",
+                1L,
+                OrderType.LIMIT,
+                OrderTimeQualifier.GOOD_TILL_CANCEL,
+                OrderSide.OFFER,
+                new BigDecimal("3000"),
+                new BigDecimal("3000"),
+                new BigDecimal("300"),
+                null);
 
         meRef.tell(noValidOrder, probe.getRef());
 
@@ -113,9 +139,11 @@ public class METest {
         // just for check ME
         meRef.tell(marketBuyOrder, probe.getRef());
         meRef.tell(limitSellOrder, probe.getRef());
-        meRef.tell(cancelOrder, probe.getRef());
+//        meRef.tell(cancelOrder, probe.getRef());
+        meRef.tell(limitSellOrder2, probe.getRef());
         meRef.tell(limitSellOrder, probe.getRef());
         meRef.tell(marketBuyOrder, probe.getRef());
+        meRef.tell(limitBuyOrder, probe.getRef());
         meRef.tell(stopLimitSellOrder, probe.getRef());
         List<Object> objects = probe.receiveN(10, TIMEOUT);
 

@@ -3,7 +3,6 @@ package edu.students.kse.me;
 import edu.students.kse.me.enums.OrderSide;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Objects;
 
 public class OrderData {
@@ -111,8 +110,6 @@ public class OrderData {
     public void setPrice(BigDecimal price) {
         this.price = price;
     }
-
-    public BigDecimal getPriceForUnit(){return price.divide(qty, RoundingMode.HALF_DOWN);}
 
     @Override
     public boolean equals(Object o) {
