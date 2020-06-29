@@ -28,7 +28,10 @@ public class MEExecutionReport extends MEOutputMessage {
 
     private final BigDecimal executedQty;
 
-    public MEExecutionReport(String execId, String clientId, String clientOrderId, String orderId, ExecType execType, OrderStatus orderStatus, BigDecimal price, BigDecimal qty, BigDecimal executedPrice, BigDecimal executedQty) {
+    private final String tradeMatchId;
+
+    public MEExecutionReport(String execId, String clientId, String clientOrderId, String orderId, ExecType execType,
+     OrderStatus orderStatus, BigDecimal price, BigDecimal qty, BigDecimal executedPrice, BigDecimal executedQty, String tradeMatchId) {
         this.execId = execId;
         this.clientId = clientId;
         this.clientOrderId = clientOrderId;
@@ -39,6 +42,7 @@ public class MEExecutionReport extends MEOutputMessage {
         this.qty = qty;
         this.executedPrice = executedPrice;
         this.executedQty = executedQty;
+        this.tradeMatchId = tradeMatchId;
     }
 
     public String getExecId() {
@@ -81,6 +85,10 @@ public class MEExecutionReport extends MEOutputMessage {
         return qty;
     }
 
+    public String getTradeMatchId() {
+        return tradeMatchId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -95,12 +103,13 @@ public class MEExecutionReport extends MEOutputMessage {
                 Objects.equals(price, that.price) &&
                 Objects.equals(qty, that.qty) &&
                 Objects.equals(executedPrice, that.executedPrice) &&
-                Objects.equals(executedQty, that.executedQty);
+                Objects.equals(executedQty, that.executedQty) &&
+                Objects.equals(tradeMatchId, that.tradeMatchId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(execId, clientId, clientOrderId, orderId, execType, orderStatus, price, qty, executedPrice, executedQty);
+        return Objects.hash(execId, clientId, clientOrderId, orderId, execType, orderStatus, price, qty, executedPrice, executedQty, tradeMatchId);
     }
 
     @Override
@@ -116,6 +125,7 @@ public class MEExecutionReport extends MEOutputMessage {
                 ", qty=" + qty +
                 ", executedPrice=" + executedPrice +
                 ", executedQty=" + executedQty +
+                ", tradeMatchId='" + tradeMatchId + '\'' +
                 '}';
     }
 }
