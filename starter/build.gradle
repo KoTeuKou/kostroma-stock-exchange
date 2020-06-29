@@ -39,7 +39,7 @@ jar {
 
 task createRpm(type: Rpm, dependsOn: jar) {
     release            '1.0'
-    packageName        'kse'
+    packageName        'kse.dmitry.lapushkin'
     summary            'Kostroma Stock Exchange'
     packageDescription 'Kostroma Stock Exchange'
     packageGroup       'Development/Tools'
@@ -52,26 +52,26 @@ task createRpm(type: Rpm, dependsOn: jar) {
     preInstall         'getent group ksegroup > /dev/null || groupadd -r ksegroup'
     preInstall         'getent passwd kse > /dev/null || useradd -r -g ksegroup kse'
 
-//    directory('/opt/kse/')  // FIXME: change path
-//    directory('/opt/kse/lib')  // FIXME: change path
-    directory('/opt/kse/logs')  // FIXME: change path
-    directory('/opt/kse/fix')  // FIXME: change path
-    directory('/opt/kse/fix/logs')  // FIXME: change path
-    directory('/opt/kse/fix/store')  // FIXME: change path
+//    directory('/opt/kse.dmitry.lapushkin/')  // FIXME: change path
+//    directory('/opt/kse.dmitry.lapushkin/lib')  // FIXME: change path
+    directory('/opt/kse.dmitry.lapushkin/logs')  // FIXME: change path
+    directory('/opt/kse.dmitry.lapushkin/fix')  // FIXME: change path
+    directory('/opt/kse.dmitry.lapushkin/fix/logs')  // FIXME: change path
+    directory('/opt/kse.dmitry.lapushkin/fix/store')  // FIXME: change path
 
 
     from(jar.outputs.files) {
-        into 'opt/kse/lib'
+        into 'opt/kse.dmitry.lapushkin/lib'
     }
 //    from(configurations.runtime) {
-//        into 'opt/kse/lib'
+//        into 'opt/kse.dmitry.lapushkin/lib'
 //    }
     from(configurations.runtimeClasspath) {
-        into 'opt/kse/lib'
+        into 'opt/kse.dmitry.lapushkin/lib'
     }
     from ('../fixoe/src/main/resources') {
         fileType CONFIG | NOREPLACE
-        into 'opt/kse/conf'
+        into 'opt/kse.dmitry.lapushkin/conf'
     }
     from('src/main/rpm/service') { // FIXME: change service-name, change service file
         addParentDirs false

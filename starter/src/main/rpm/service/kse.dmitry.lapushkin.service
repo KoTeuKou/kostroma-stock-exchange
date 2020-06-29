@@ -2,8 +2,8 @@
 Description=KSE
 
 [Service]
-WorkingDirectory=/opt/kse
-Environment=CONFIG_DIR=/opt/kse/conf
+WorkingDirectory=/opt/kse.dmitry.lapushkin
+Environment=CONFIG_DIR=/opt/kse.dmitry.lapushkin/conf
 ExecStart=/bin/java -Xms128m -Xmx256m -jar lib/starter-1.0.jar
 User=kse
 Type=simple

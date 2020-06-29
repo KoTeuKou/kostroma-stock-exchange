@@ -1,0 +1,16 @@
+image: openjdk:11-slim
+
+stages:
+  - build
+
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+build:
+  stage: build
+  script:
+    - ./gradlew clean build createRpm
+  artifacts:
+    paths:
+      - starter/build/distributions/*.rpm
+    expire_in: 1 month
