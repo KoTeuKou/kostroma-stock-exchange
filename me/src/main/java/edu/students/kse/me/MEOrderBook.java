@@ -12,6 +12,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MEOrderBook {
 
@@ -22,6 +24,7 @@ public class MEOrderBook {
     private final ArrayList<MENewOrderMessage> stoppedLimitOffers = new ArrayList<>();
     private final ArrayList<MENewOrderMessage> stoppedLimitBids = new ArrayList<>();
     private final MEIdGenerator generator;
+    private final Logger logger = LoggerFactory.getLogger(MEOrderBook.class);
 
 
     public MEOrderBook(long instrumentId, MEIdGenerator generator) {
@@ -33,7 +36,7 @@ public class MEOrderBook {
         OrderData reqOrderData;
         ArrayList<OrderData> orders;
         if (meCancelMessage.getSide() == OrderSide.BID){
-            orders = this.bids;
+            orders = bids;
         }
         else {
             orders = offers;
@@ -43,21 +46,23 @@ public class MEOrderBook {
                 .findFirst().orElse(null);
         // If such order has been found => remove from book & create report
         if (reqOrderData != null) {
-            if (meCancelMessage.getSide() == OrderSide.BID) {
-                this.bids.remove(reqOrderData);
+            if (reqOrderData.getClientId().equals(meCancelMessage.getClientId())) {
+                orders.remove(reqOrderData);
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), meCancelMessage.getClientId(),
+                        meCancelMessage.getClientOrderId(), reqOrderData.getOrderId(), ExecType.CANCELLED, OrderStatus.CANCELLED,
+                        reqOrderData.getPrice(), reqOrderData.getLeavesQty(), null, null));
             }
             else {
-                offers.remove(reqOrderData);
+                logger.error("Access to order cancellation is denied. Reason: real clientId: {}, submitted clientId: {}.",
+                        reqOrderData.getClientId(), meCancelMessage.getClientId());
             }
-            collector.add(new MEExecutionReport(generator.getNextExecutionId(), meCancelMessage.getClientId(),
-                    meCancelMessage.getClientOrderId(), reqOrderData.getOrderId(), ExecType.CANCELLED, OrderStatus.CANCELLED,
-                    reqOrderData.getPrice(), reqOrderData.getLeavesQty(), null, null));
         }
         // If orderId was incorrect or doesnt' exist
         else {
             collector.add(new MEExecutionReport(generator.getNextExecutionId(), meCancelMessage.getClientId(),
                     meCancelMessage.getClientOrderId(), meCancelMessage.getOrderId(), ExecType.REJECTED, OrderStatus.REJECTED,
                     null, null, null, null));
+            logger.error("ClientOrderId: {} for order-cancellation doesn't exist.", meCancelMessage.getOriginalClientOrderId());
         }
     }
 
@@ -65,6 +70,7 @@ public class MEOrderBook {
     public void process(MENewOrderMessage newOrderMessage, TransactionBuilder collector) {
 
         if (!isValid(newOrderMessage)) {
+            logger.error("Incoming order with Id: {} was rejected by validation.", newOrderMessage.getOrderId());
             collector.add(new MEExecutionReport(generator.getNextExecutionId(), newOrderMessage.getClientId(),
                     newOrderMessage.getClientOrderId(), newOrderMessage.getOrderId(), ExecType.REJECTED,
                     OrderStatus.REJECTED, newOrderMessage.getLimitPrice(), newOrderMessage.getOrderQty(), null, null));
@@ -136,8 +142,8 @@ public class MEOrderBook {
 
     private OrderData findSuitablePair(OrderType orderType, OrderData incomingOrder, List<OrderData> ordersList, OrderTimeQualifier tif) {
 
-        Predicate<OrderData> orderDataPredicate = orderData -> orderData.getPrice().compareTo(incomingOrder.getPrice()) <= 0;
-        Predicate<OrderData> anotherOrderDataPredicate = orderData -> orderData.getPrice().compareTo(incomingOrder.getPrice()) >= 0;
+        Predicate<OrderData> incomingOrderPriceGreaterThanOrderOnBook = orderData -> orderData.getPrice().compareTo(incomingOrder.getPrice()) <= 0;
+        Predicate<OrderData> incomingOrderPriceLessThanOrderOnBook = orderData -> orderData.getPrice().compareTo(incomingOrder.getPrice()) >= 0;
         Predicate<OrderData> predicateFOK = orderData -> orderData.getLeavesQty().compareTo(incomingOrder.getLeavesQty()) >= 0;
 
         Predicate<OrderData> currentOrderDataPredicate;
@@ -145,20 +151,20 @@ public class MEOrderBook {
         if (orderType == OrderType.STOP) {
 
             if (incomingOrder.getSide().equals(OrderSide.BID)) {
-                currentOrderDataPredicate = anotherOrderDataPredicate;
+                currentOrderDataPredicate = incomingOrderPriceLessThanOrderOnBook;
             }
             else {
-                currentOrderDataPredicate = orderDataPredicate;
+                currentOrderDataPredicate = incomingOrderPriceGreaterThanOrderOnBook;
             }
         }
 
         else if (orderType == OrderType.LIMIT) {
 
             if (incomingOrder.getSide().equals(OrderSide.BID)) {
-                currentOrderDataPredicate = orderDataPredicate;
+                currentOrderDataPredicate = incomingOrderPriceGreaterThanOrderOnBook;
             }
             else {
-                currentOrderDataPredicate = anotherOrderDataPredicate;
+                currentOrderDataPredicate = incomingOrderPriceLessThanOrderOnBook;
             }
         }
         // For Market order
@@ -209,7 +215,7 @@ public class MEOrderBook {
                     bids.remove(tempOrderData);
                 else
                     offers.remove(tempOrderData);
-
+                logger.info("Order with id: {} has been removed from OrderBook due to its completion.", tempOrderData.getOrderId());
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), tempOrderData.getClientId(),
                         tempOrderData.getClientOrderId(), tempOrderData.getOrderId(), ExecType.TRADE, OrderStatus.FILLED,
                         tempOrderData.getPrice(), tempOrderData.getLeavesQty(), tempOrderData.getPrice(), existedQty));
@@ -227,7 +233,7 @@ public class MEOrderBook {
                     offers.remove(tempOrderData);
                 else
                     bids.remove(tempOrderData);
-
+                logger.info("Order with id: {} has been cancelled due to insufficient quantity.", tempOrderData.getOrderId());
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), tempOrderData.getClientId(),
                         tempOrderData.getClientOrderId(), tempOrderData.getOrderId(), ExecType.CANCELLED,
                         OrderStatus.CANCELLED, tempOrderData.getPrice(), tempOrderData.getLeavesQty(),
@@ -238,6 +244,7 @@ public class MEOrderBook {
         else {
 
             if (orderType == OrderType.MARKET || tif == OrderTimeQualifier.IMMEDIATE_OR_CANCEL) {
+                logger.info("Order with id: {} has been cancelled because there was no suitable offer.", incomingOrder.getOrderId());
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
                         incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.CANCELLED,
                         OrderStatus.CANCELLED, incomingOrder.getPrice(), incomingOrder.getLeavesQty(), null, null));
@@ -247,7 +254,7 @@ public class MEOrderBook {
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
                         incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.NEW, OrderStatus.NEW,
                         incomingOrder.getPrice(), incomingOrder.getLeavesQty(), null, null));
-
+                logger.info("Order with id: {} was placed to the OrderBook because there was no suitable offer.", incomingOrder.getOrderId());
                 if (incomingOrder.getSide() == OrderSide.BID)
                     bids.add(incomingOrder);
                 else
@@ -270,15 +277,26 @@ public class MEOrderBook {
     }
 
     private boolean isValid(MENewOrderMessage msg) {
-        if (msg.getOrderQty().compareTo(minSize) < 0)
+        if (msg.getOrderQty().compareTo(minSize) < 0) {
+            logger.error("Value of order's quantity less than minimal value. Minimal size: {}, submitted quantity: {}.",
+                    minSize, msg.getOrderQty());
             return false;
+        }
         ArrayList<OrderType> types = new ArrayList<>(Arrays.asList(OrderType.values()));
-        if (!types.contains(msg.getOrderType()))
+        if (!types.contains(msg.getOrderType())) {
+            logger.error("Unexpected value of order's type: {}.", msg.getOrderType());
             return false;
+        }
         ArrayList<OrderSide> sides = new ArrayList<>(Arrays.asList(OrderSide.values()));
-        if (!sides.contains(msg.getSide()))
+        if (!sides.contains(msg.getSide())) {
+            logger.error("Unexpected value of order's side: {}.", msg.getSide());
             return false;
+        }
         ArrayList<OrderTimeQualifier> tif = new ArrayList<>(Arrays.asList(OrderTimeQualifier.values()));
-        return tif.contains(msg.getTif());
+        if (tif.contains(msg.getTif())) {
+            logger.error("Unexpected value of order's time in force type: {}.", msg.getTif());
+            return false;
+        }
+        return true;
     }
 }
