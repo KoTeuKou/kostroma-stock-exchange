@@ -163,7 +163,10 @@ public class MEOrderBook {
         }
         // For Market order
         else {
-            return ordersList.stream().findFirst().orElse(null);
+            if (tif == OrderTimeQualifier.FILL_OR_KILL)
+                currentOrderDataPredicate = predicateFOK;
+            else
+                return ordersList.stream().findFirst().orElse(null);
         }
 
         if (tif == OrderTimeQualifier.FILL_OR_KILL){
