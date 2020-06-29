@@ -130,6 +130,8 @@ public class MEOrderBook {
 
                     if (!sortedOrderList.isEmpty())
                         tempOrderData = findSuitablePair(orderType, incomingOrder, sortedOrderList, orderTimeQualifier);
+                    else
+                        logger.info("The opposite list of orders is empty.");
 
                     if (orderType != OrderType.STOP_LIMIT)
                         generateReportsForOrders(collector, tempOrderData, incomingOrder, orderType, orderTimeQualifier);
@@ -146,9 +148,9 @@ public class MEOrderBook {
 
         Predicate<OrderData> incomingOrderPriceGreaterThanOrderOnBook = orderData -> orderData.getPrice().compareTo(incomingOrder.getPrice()) <= 0;
         Predicate<OrderData> incomingOrderPriceLessThanOrderOnBook = orderData -> orderData.getPrice().compareTo(incomingOrder.getPrice()) >= 0;
-        Predicate<OrderData> predicateFOK = orderData -> orderData.getLeavesQty().compareTo(incomingOrder.getLeavesQty()) >= 0;
 
         Predicate<OrderData> currentOrderDataPredicate;
+
 
         if (orderType == OrderType.STOP) {
 
@@ -171,14 +173,21 @@ public class MEOrderBook {
         }
         // For Market order
         else {
-            if (tif == OrderTimeQualifier.FILL_OR_KILL)
-                currentOrderDataPredicate = predicateFOK;
-            else
-                return ordersList.stream().findFirst().orElse(null);
+            return ordersList.stream().findFirst().orElse(null);
         }
-
         if (tif == OrderTimeQualifier.FILL_OR_KILL){
-            currentOrderDataPredicate = currentOrderDataPredicate.and(predicateFOK);
+            BigDecimal sumQty = BigDecimal.ZERO;
+            List<OrderData> suitableOrders = new ArrayList<>();
+            while (sumQty.compareTo(incomingOrder.getLeavesQty()) < 0) {
+                OrderData orderData = ordersList.stream().filter(currentOrderDataPredicate.and(order -> !suitableOrders.contains(order)))
+                        .findFirst().orElse(null);
+                if (orderData != null) {
+                    suitableOrders.add(orderData);
+                    sumQty = sumQty.add(orderData.getLeavesQty());
+                }
+                else
+                    return null;
+            }
         }
         return ordersList.stream().filter(currentOrderDataPredicate).findFirst().orElse(null);
     }
@@ -206,9 +215,10 @@ public class MEOrderBook {
             }
 
             String matchId = generator.getNextMatchId();
-            
+
             collector.add(new METradeMessage(matchId, buyOrder.getClientId(), sellOrder.getClientId(), buyOrder.getOrderId(),
                     sellOrder.getOrderId(), executedQty, tempOrderData.getPrice(), incomingOrder.getInstrumentId(), TradeType.REGULAR));
+            logger.info("Successful trade between of buy-order: {} and sell-order: {}", buyOrder.getOrderId(), sellOrder.getOrderId());
             // Reports for incoming order
             // Filled
             if (incomingOrder.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
@@ -231,7 +241,7 @@ public class MEOrderBook {
                     bids.remove(tempOrderData);
                 else
                     offers.remove(tempOrderData);
-                logger.info("Order with id: {} has been removed from OrderBook due to its completion.", tempOrderData.getOrderId());
+                logger.info("Order with id: {} has been removed due to its completion.", tempOrderData.getOrderId());
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), tempOrderData.getClientId(),
                         tempOrderData.getClientOrderId(), tempOrderData.getOrderId(), ExecType.TRADE, OrderStatus.FILLED,
                         tempOrderData.getPrice(), tempOrderData.getLeavesQty(), tempOrderData.getPrice(), existedQty, matchId));
@@ -259,7 +269,7 @@ public class MEOrderBook {
         // No such offer
         else {
 
-            if (orderType == OrderType.MARKET || tif == OrderTimeQualifier.IMMEDIATE_OR_CANCEL) {
+            if (orderType == OrderType.MARKET || tif == OrderTimeQualifier.IMMEDIATE_OR_CANCEL || tif == OrderTimeQualifier.FILL_OR_KILL) {
                 logger.info("Order with id: {} has been cancelled because there was no suitable offer.", incomingOrder.getOrderId());
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
                         incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.CANCELLED,
@@ -309,7 +319,7 @@ public class MEOrderBook {
             return false;
         }
         ArrayList<OrderTimeQualifier> tif = new ArrayList<>(Arrays.asList(OrderTimeQualifier.values()));
-        if (tif.contains(msg.getTif())) {
+        if (!tif.contains(msg.getTif())) {
             logger.error("Unexpected value of order's time in force type: {}.", msg.getTif());
             return false;
         }
