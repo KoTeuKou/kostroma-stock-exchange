@@ -53,8 +53,12 @@ public class MEOrderBook {
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), meCancelMessage.getClientId(),
                         meCancelMessage.getClientOrderId(), reqOrderData.getOrderId(), ExecType.CANCELLED, OrderStatus.CANCELLED,
                         reqOrderData.getPrice(), reqOrderData.getLeavesQty(), null, null, null));
+                logger.info("Order with Id: {} has been removed by cancel message.", reqOrderData.getOrderId());
             }
             else {
+                collector.add(new MEExecutionReport(generator.getNextExecutionId(), meCancelMessage.getClientId(),
+                        meCancelMessage.getClientOrderId(), meCancelMessage.getOrderId(), ExecType.REJECTED, OrderStatus.REJECTED,
+                        null, null, null, null, null));
                 logger.error("Access to order cancellation is denied. Reason: real clientId: {}, submitted clientId: {}.",
                         reqOrderData.getClientId(), meCancelMessage.getClientId());
             }
@@ -134,7 +138,7 @@ public class MEOrderBook {
                         logger.info("The opposite list of orders is empty.");
 
                     if (orderType != OrderType.STOP_LIMIT)
-                        generateReportsForOrders(collector, tempOrderData, incomingOrder, orderType, orderTimeQualifier);
+                        processingOfOrders(collector, tempOrderData, incomingOrder, orderType, orderTimeQualifier);
 
                     if (tempOrderData == null)
                         break;
@@ -176,24 +180,18 @@ public class MEOrderBook {
             return ordersList.stream().findFirst().orElse(null);
         }
         if (tif == OrderTimeQualifier.FILL_OR_KILL){
-            BigDecimal sumQty = BigDecimal.ZERO;
-            List<OrderData> suitableOrders = new ArrayList<>();
-            while (sumQty.compareTo(incomingOrder.getLeavesQty()) < 0) {
-                OrderData orderData = ordersList.stream().filter(currentOrderDataPredicate.and(order -> !suitableOrders.contains(order)))
-                        .findFirst().orElse(null);
-                if (orderData != null) {
-                    suitableOrders.add(orderData);
-                    sumQty = sumQty.add(orderData.getLeavesQty());
-                }
-                else
-                    return null;
-            }
+            BigDecimal sumQty = ordersList.stream()
+                    .filter(currentOrderDataPredicate)
+                    .map(OrderData::getLeavesQty)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (sumQty.compareTo(incomingOrder.getLeavesQty()) < 0)
+                return null;
         }
         return ordersList.stream().filter(currentOrderDataPredicate).findFirst().orElse(null);
     }
 
-    private void generateReportsForOrders(TransactionBuilder collector, OrderData tempOrderData, OrderData incomingOrder,
-                                          OrderType orderType, OrderTimeQualifier tif) {
+    private void processingOfOrders(TransactionBuilder collector, OrderData tempOrderData, OrderData incomingOrder,
+                                    OrderType orderType, OrderTimeQualifier tif) {
 
         if (tempOrderData != null) {
 
