@@ -1,32 +1,27 @@
 package edu.students.kse.fixoe;
 
 import akka.actor.ActorRef;
-import edu.students.kse.me.messages.MEExecutionReport;
-import edu.students.kse.me.messages.MENewOrderMessage;
-import edu.students.kse.me.messages.MEOutputMessage;
-import edu.students.kse.me.messages.TransactionComplete;
+import edu.students.kse.me.MEIdGenerator;
+import edu.students.kse.me.enums.OrderSide;
+import edu.students.kse.me.enums.OrderStatus;
+import edu.students.kse.me.enums.OrderTimeQualifier;
+import edu.students.kse.me.enums.OrderType;
+import edu.students.kse.me.messages.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import quickfix.*;
-import quickfix.field.OrderQty;
-import quickfix.field.Price;
-import quickfix.field.Symbol;
+import quickfix.field.*;
 import quickfix.fix50sp2.ExecutionReport;
 import quickfix.fix50sp2.NewOrderSingle;
+import quickfix.fix50sp2.OrderCancelRequest;
 import quickfix.mina.acceptor.DynamicAcceptorSessionProvider;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static quickfix.Acceptor.SETTING_ACCEPTOR_TEMPLATE;
-import static quickfix.Acceptor.SETTING_SOCKET_ACCEPT_ADDRESS;
-import static quickfix.Acceptor.SETTING_SOCKET_ACCEPT_PORT;
+import static quickfix.Acceptor.*;
 
 public class FixApplication extends quickfix.fix50sp2.MessageCracker implements Application {
 
@@ -39,12 +34,14 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
     private MessageFactory messageFactory;
     private LogFactory logFactory;
     private SocketAcceptor acceptor;
+    private final MEIdGenerator generator;
 
     private final Map<SessionID, Session> createdSessions = new HashMap<>();
     private final Map<InetSocketAddress, List<DynamicAcceptorSessionProvider.TemplateMapping>> dynamicSessionMappings;
 
 
     public FixApplication(ActorRef fsaRef, InputStream sessionConfig) {
+        this.generator = new MEIdGenerator();
         this.fsaRef = fsaRef;
         try {
             settings = new SessionSettings(sessionConfig);
@@ -80,15 +77,22 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
 
 
     @Override
-    public void onMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound, UnsupportedMessageType, IncorrectTagValue {
-        MENewOrderMessage meOrderMessage = getConvertedMessage(message, sessionID);
+    public void onMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
+
+        MENewOrderMessage meOrderMessage = getConvertedNewOrderMessage(message, sessionID);
         fsaRef.tell(meOrderMessage, ActorRef.noSender());
+        logger.info("FIX message sent to ME");
+    }
+
+    @Override
+    public void onMessage(OrderCancelRequest message, SessionID sessionID) throws FieldNotFound, UnsupportedMessageType, IncorrectTagValue {
+        MECancelMessage cancelMessage = getConvertedCancelOrderMessage(message, sessionID);
+        fsaRef.tell(cancelMessage, ActorRef.noSender());
         logger.info("FIX message sent to ME");
     }
 
     public void start() {
         try {
-
             acceptor.start();
             logger.info("FIX acceptor started");
         } catch (ConfigError configError) {
@@ -161,17 +165,41 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
             // TODO: add support transaction complete messages
             return null;
         } else if (msg instanceof MEExecutionReport) {
-            return new ExecutionReport();
+            MEExecutionReport executionReport = (MEExecutionReport) msg;
+            return new ExecutionReport(new OrderID(executionReport.getOrderId()),new ExecID(executionReport.getExecId()),
+                    new ExecType(executionReport.getExecType().getCode()), new OrdStatus((char) executionReport.getOrderStatus().getCode()),
+                    new Side((char) executionReport.getSide().getCode()), new LeavesQty(executionReport.getQty().doubleValue()),
+                    new CumQty(executionReport.getExecutedQty().doubleValue()));
         } else {
             throw new UnsupportedMessageType();
         }
     }
 
-    private MENewOrderMessage getConvertedMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
-        long instrId = message.getString(Symbol.FIELD).hashCode(); // FIXME: add mapping Symbol
-        BigDecimal price = new BigDecimal(message.getString(Price.FIELD));
-        BigDecimal size = new BigDecimal(message.getString(OrderQty.FIELD));
-        return new MENewOrderMessage(sessionID.toString(), instrId, price, size);
+    private MENewOrderMessage getConvertedNewOrderMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
+        String clOrdId = message.getString(ClOrdID.FIELD);
+        String clId = message.getString(ClientID.FIELD);
+        long instrId = message.getString(Symbol.FIELD).hashCode();
+        OrderType ordType = OrderType.getEnumByValue(message.getString(OrdType.FIELD));
+        OrderTimeQualifier tif = OrderTimeQualifier.getEnumByValue(message.getString(TimeInForce.FIELD));
+        OrderSide side = OrderSide.getEnumByValue(message.getString(Side.FIELD));
+        BigDecimal orderQty = new BigDecimal(message.getString(OrderQty.FIELD));
+        BigDecimal limitPrice = new BigDecimal(message.getString(Price.FIELD));
+        BigDecimal stopPrice = null;
+        if (ordType == OrderType.STOP || ordType == OrderType.STOP_LIMIT) {
+            stopPrice = new BigDecimal(message.getString(StopPx.FIELD));
+        }
+        String orderId = generator.getNextOrderId();
+        return new MENewOrderMessage(clOrdId, orderId, clId, instrId, ordType, tif, side, orderQty, orderQty, limitPrice, stopPrice);
+    }
+
+    private MECancelMessage getConvertedCancelOrderMessage(OrderCancelRequest message, SessionID sessionID) throws FieldNotFound {
+        String clOrdId = message.getString(ClOrdID.FIELD);
+        String clId = message.getString(ClientID.FIELD);
+        long instrId = message.getString(Symbol.FIELD).hashCode();
+        String originalClientOrderId = message.getString(OrigClOrdID.FIELD);
+        String orderId = generator.getNextOrderId();
+        OrderSide side = OrderSide.getEnumByValue(message.getString(Side.FIELD));
+        return new MECancelMessage(clOrdId, clId, originalClientOrderId, orderId, instrId, side);
     }
 
     // Dynamic sessions:
@@ -183,7 +211,6 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         Iterator<SessionID> sectionIterator = settings.sectionIterator();
         while (sectionIterator.hasNext()) {
             SessionID sessionID = sectionIterator.next();
-
             if (isSessionTemplate(settings, sessionID)) {
                 InetSocketAddress address = getAcceptorSocketAddress(settings, sessionID);
                 getMappings(address).add(new DynamicAcceptorSessionProvider.TemplateMapping(sessionID, sessionID));

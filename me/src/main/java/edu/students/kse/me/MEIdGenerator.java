@@ -15,4 +15,10 @@ public class MEIdGenerator {
     public String getNextMatchId() {
         return "M" + id++;
     }
+
+    public String getNextExecutionId() {
+        return "E" + id++;
+    }
+
+    public long getNextTransactionId() {return id++;}
 }

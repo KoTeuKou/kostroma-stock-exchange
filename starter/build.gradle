@@ -1,3 +1,21 @@
+
+apply plugin: 'nebula.rpm'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "com.netflix.nebula:gradle-ospackage-plugin:8.3.0"
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+
 dependencies {
     implementation project(':me')
     implementation project(':fixoe')
@@ -7,4 +25,56 @@ dependencies {
     implementation 'org.slf4j:slf4j-log4j12:1.7.25'
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+jar {
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/*.MF'
+    manifest {
+        attributes(
+                'Main-Class': 'edu.students.kse.starter.Application',
+                'Class-Path': configurations.runtimeClasspath.files.collect { "$it.name" }.join(' ')
+        )
+    }
+}
+
+task createRpm(type: Rpm, dependsOn: jar) {
+    release            '1.0'
+    packageName        'kse.dmitry.lapushkin'
+    summary            'Kostroma Stock Exchange'
+    packageDescription 'Kostroma Stock Exchange'
+    packageGroup       'Development/Tools'
+    os                 'LINUX'
+    license            'Proprietary'
+    url                'http://www.kse.com'
+    vendor             'KSE Systems'
+    user               'kse'
+    permissionGroup    'ksegroup'
+    preInstall         'getent group ksegroup > /dev/null || groupadd -r ksegroup'
+    preInstall         'getent passwd kse > /dev/null || useradd -r -g ksegroup kse'
+
+//    directory('/opt/kse.dmitry.lapushkin/')  // FIXME: change path
+//    directory('/opt/kse.dmitry.lapushkin/lib')  // FIXME: change path
+    directory('/opt/kse.dmitry.lapushkin/logs')  // FIXME: change path
+    directory('/opt/kse.dmitry.lapushkin/fix')  // FIXME: change path
+    directory('/opt/kse.dmitry.lapushkin/fix/logs')  // FIXME: change path
+    directory('/opt/kse.dmitry.lapushkin/fix/store')  // FIXME: change path
+
+
+    from(jar.outputs.files) {
+        into 'opt/kse.dmitry.lapushkin/lib'
+    }
+//    from(configurations.runtime) {
+//        into 'opt/kse.dmitry.lapushkin/lib'
+//    }
+    from(configurations.runtimeClasspath) {
+        into 'opt/kse.dmitry.lapushkin/lib'
+    }
+    from ('../fixoe/src/main/resources') {
+        fileType CONFIG | NOREPLACE
+        into 'opt/kse.dmitry.lapushkin/conf'
+    }
+    from('src/main/rpm/service') { // FIXME: change service-name, change service file
+        addParentDirs false
+        into '/etc/systemd/system'
+    }
 }

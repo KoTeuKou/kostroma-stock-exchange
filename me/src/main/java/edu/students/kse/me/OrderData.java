@@ -3,6 +3,7 @@ package edu.students.kse.me;
 import edu.students.kse.me.enums.OrderSide;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class OrderData {
 
@@ -11,14 +12,10 @@ public class OrderData {
     // unique id
     private long transactionId;
 
-    // order entry size
-    private BigDecimal qty;
-
-    // leaves qty
-    private BigDecimal leavesQty;
-
     // order owner
-    private long userId;
+    private String clientId;
+
+    private String clientOrderId;
 
     // unique order identifier
     private String orderId;
@@ -27,15 +24,31 @@ public class OrderData {
 
     private BigDecimal price;
 
-    public OrderData(long instrumentId, long transactionId, BigDecimal qty, BigDecimal leavesQty, long userId, String orderId, OrderSide side, BigDecimal price) {
+    // order entry size
+    private BigDecimal qty;
+
+    // leaves qty
+    private BigDecimal leavesQty;
+
+    public OrderData(long instrumentId, long transactionId, String clientId, String clientOrderId, String orderId, OrderSide side, BigDecimal price, BigDecimal qty, BigDecimal leavesQty) {
         this.instrumentId = instrumentId;
         this.transactionId = transactionId;
-        this.qty = qty;
-        this.leavesQty = leavesQty;
-        this.userId = userId;
+        this.clientId = clientId;
+        this.clientOrderId = clientOrderId;
         this.orderId = orderId;
         this.side = side;
         this.price = price;
+        this.qty = qty;
+        this.leavesQty = leavesQty;
+    }
+
+
+    public String getClientOrderId() {
+        return clientOrderId;
+    }
+
+    public void setClientOrderId(String clientOrderId) {
+        this.clientOrderId = clientOrderId;
     }
 
     public long getInstrumentId() {
@@ -66,12 +79,12 @@ public class OrderData {
         this.leavesQty = leavesQty;
     }
 
-    public long getUserId() {
-        return userId;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setUserId(long userId) {
-        this.userId = userId;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public String getOrderId() {
@@ -99,17 +112,39 @@ public class OrderData {
     }
 
     @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("OrderData{");
-        sb.append("instrumentId=").append(instrumentId);
-        sb.append(", transactionId=").append(transactionId);
-        sb.append(", qty=").append(qty);
-        sb.append(", leavesQty=").append(leavesQty);
-        sb.append(", userId=").append(userId);
-        sb.append(", orderId='").append(orderId).append('\'');
-        sb.append(", side=").append(side);
-        sb.append(", price=").append(price);
-        sb.append('}');
-        return sb.toString();
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OrderData)) return false;
+        OrderData orderData = (OrderData) o;
+        return instrumentId == orderData.instrumentId &&
+                transactionId == orderData.transactionId &&
+                Objects.equals(clientId, orderData.clientId) &&
+                Objects.equals(clientOrderId, orderData.clientOrderId) &&
+                Objects.equals(orderId, orderData.orderId) &&
+                side == orderData.side &&
+                Objects.equals(price, orderData.price) &&
+                Objects.equals(qty, orderData.qty) &&
+                Objects.equals(leavesQty, orderData.leavesQty);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(instrumentId, transactionId, clientId, clientOrderId, orderId, side, price, qty, leavesQty);
+    }
+
+    @Override
+    public String toString() {
+        return "OrderData{" +
+                "instrumentId=" + instrumentId +
+                ", transactionId=" + transactionId +
+                ", clientId='" + clientId + '\'' +
+                ", clientOrderId='" + clientOrderId + '\'' +
+                ", orderId='" + orderId + '\'' +
+                ", side=" + side +
+                ", price=" + price +
+                ", qty=" + qty +
+                ", leavesQty=" + leavesQty +
+                '}';
+    }
+
 }
