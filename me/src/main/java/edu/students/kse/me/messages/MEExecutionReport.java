@@ -1,6 +1,7 @@
 package edu.students.kse.me.messages;
 
 import edu.students.kse.me.enums.ExecType;
+import edu.students.kse.me.enums.OrderSide;
 import edu.students.kse.me.enums.OrderStatus;
 
 import java.math.BigDecimal;
@@ -28,10 +29,12 @@ public class MEExecutionReport extends MEOutputMessage {
 
     private final BigDecimal executedQty;
 
+    private final OrderSide side;
+
     private final String tradeMatchId;
 
     public MEExecutionReport(String execId, String clientId, String clientOrderId, String orderId, ExecType execType,
-     OrderStatus orderStatus, BigDecimal price, BigDecimal qty, BigDecimal executedPrice, BigDecimal executedQty, String tradeMatchId) {
+                             OrderStatus orderStatus, BigDecimal price, BigDecimal qty, BigDecimal executedPrice, BigDecimal executedQty, OrderSide side, String tradeMatchId) {
         this.execId = execId;
         this.clientId = clientId;
         this.clientOrderId = clientOrderId;
@@ -42,6 +45,7 @@ public class MEExecutionReport extends MEOutputMessage {
         this.qty = qty;
         this.executedPrice = executedPrice;
         this.executedQty = executedQty;
+        this.side = side;
         this.tradeMatchId = tradeMatchId;
     }
 
@@ -89,6 +93,10 @@ public class MEExecutionReport extends MEOutputMessage {
         return tradeMatchId;
     }
 
+    public OrderSide getSide() {
+        return side;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -100,6 +108,7 @@ public class MEExecutionReport extends MEOutputMessage {
                 Objects.equals(orderId, that.orderId) &&
                 execType == that.execType &&
                 orderStatus == that.orderStatus &&
+                side == that.side &&
                 Objects.equals(price, that.price) &&
                 Objects.equals(qty, that.qty) &&
                 Objects.equals(executedPrice, that.executedPrice) &&
@@ -109,7 +118,7 @@ public class MEExecutionReport extends MEOutputMessage {
 
     @Override
     public int hashCode() {
-        return Objects.hash(execId, clientId, clientOrderId, orderId, execType, orderStatus, price, qty, executedPrice, executedQty, tradeMatchId);
+        return Objects.hash(execId, clientId, clientOrderId, orderId, execType, orderStatus, price, qty, executedPrice, executedQty, side, tradeMatchId);
     }
 
     @Override
@@ -125,6 +134,7 @@ public class MEExecutionReport extends MEOutputMessage {
                 ", qty=" + qty +
                 ", executedPrice=" + executedPrice +
                 ", executedQty=" + executedQty +
+                ", side=" + side +
                 ", tradeMatchId='" + tradeMatchId + '\'' +
                 '}';
     }

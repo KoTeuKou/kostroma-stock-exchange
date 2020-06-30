@@ -32,7 +32,6 @@ public class METest {
     }
 
     MENewOrderMessage noValidOrder = new MENewOrderMessage(
-            "requestId1",
             "clientOrderId1",
             "orderId1", "clientId1",
             1L,
@@ -45,7 +44,6 @@ public class METest {
             null);
 
     MENewOrderMessage marketBuyOrder = new MENewOrderMessage(
-            "requestId2",
             "clientOrderId2",
             "orderId2", "clientId2",
             1L,
@@ -58,7 +56,6 @@ public class METest {
             null);
 
     MENewOrderMessage limitSellOrder = new MENewOrderMessage(
-            "requestId3",
             "clientOrderId3",
             "orderId3", "clientId3",
             1L,
@@ -71,7 +68,6 @@ public class METest {
             null);
 
     MENewOrderMessage stopLimitSellOrder = new MENewOrderMessage(
-            "requestId4",
             "clientOrderId4",
             "orderId4", "clientId4",
             1L,
@@ -92,7 +88,6 @@ public class METest {
             OrderSide.OFFER);
 
     MENewOrderMessage limitSellOrder2 = new MENewOrderMessage(
-            "requestId7",
             "clientOrderId7",
             "orderId7", "clientId7",
             1L,
@@ -105,7 +100,6 @@ public class METest {
             null);
 
     MENewOrderMessage limitSellOrder3 = new MENewOrderMessage(
-            "requestId9",
             "clientOrderId9",
             "orderId9", "clientId9",
             1L,
@@ -118,7 +112,6 @@ public class METest {
             null);
 
     MENewOrderMessage limitBuyOrder = new MENewOrderMessage(
-            "requestId6",
             "clientOrderId6",
             "orderId6", "clientId6",
             1L,

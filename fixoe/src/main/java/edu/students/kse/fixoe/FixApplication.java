@@ -3,6 +3,7 @@ package edu.students.kse.fixoe;
 import akka.actor.ActorRef;
 import edu.students.kse.me.MEIdGenerator;
 import edu.students.kse.me.enums.OrderSide;
+import edu.students.kse.me.enums.OrderStatus;
 import edu.students.kse.me.enums.OrderTimeQualifier;
 import edu.students.kse.me.enums.OrderType;
 import edu.students.kse.me.messages.*;
@@ -164,14 +165,17 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
             // TODO: add support transaction complete messages
             return null;
         } else if (msg instanceof MEExecutionReport) {
-            return new ExecutionReport();
+            MEExecutionReport executionReport = (MEExecutionReport) msg;
+            return new ExecutionReport(new OrderID(executionReport.getOrderId()),new ExecID(executionReport.getExecId()),
+                    new ExecType(executionReport.getExecType().getCode()), new OrdStatus((char) executionReport.getOrderStatus().getCode()),
+                    new Side((char) executionReport.getSide().getCode()), new LeavesQty(executionReport.getQty().doubleValue()),
+                    new CumQty(executionReport.getExecutedQty().doubleValue()));
         } else {
             throw new UnsupportedMessageType();
         }
     }
 
     private MENewOrderMessage getConvertedNewOrderMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
-        String reqId = message.getString(TradeRequestID.FIELD);
         String clOrdId = message.getString(ClOrdID.FIELD);
         String clId = message.getString(ClientID.FIELD);
         long instrId = message.getString(Symbol.FIELD).hashCode();
@@ -179,11 +183,10 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         OrderTimeQualifier tif = OrderTimeQualifier.getEnumByValue(message.getString(TimeInForce.FIELD));
         OrderSide side = OrderSide.getEnumByValue(message.getString(Side.FIELD));
         BigDecimal orderQty = new BigDecimal(message.getString(OrderQty.FIELD));
-        BigDecimal displayQty = new BigDecimal(message.getString(DisplayQty.FIELD));
         BigDecimal limitPrice = new BigDecimal(message.getString(Price.FIELD));
         BigDecimal stopPrice = new BigDecimal(message.getString(StopPx.FIELD));
         String orderId = generator.getNextOrderId();
-        return new MENewOrderMessage(reqId, clOrdId, orderId, clId, instrId, ordType, tif, side, orderQty, displayQty, limitPrice, stopPrice);
+        return new MENewOrderMessage(clOrdId, orderId, clId, instrId, ordType, tif, side, orderQty, orderQty, limitPrice, stopPrice);
     }
 
     private MECancelMessage getConvertedCancelOrderMessage(OrderCancelRequest message, SessionID sessionID) throws FieldNotFound {

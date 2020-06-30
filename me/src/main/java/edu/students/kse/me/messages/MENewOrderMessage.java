@@ -9,8 +9,6 @@ import java.util.Objects;
 
 public class MENewOrderMessage extends MEInputMessage {
 
-    private final String requestId;
-
     private final String clientOrderId;
 
     private final String orderId;
@@ -34,9 +32,8 @@ public class MENewOrderMessage extends MEInputMessage {
     private final BigDecimal stopPrice;
 
 
-    public MENewOrderMessage(String requestId, String clientOrderId, String orderId, String clientId, long instrId, OrderType orderType, OrderTimeQualifier tif,
+    public MENewOrderMessage(String clientOrderId, String orderId, String clientId, long instrId, OrderType orderType, OrderTimeQualifier tif,
                              OrderSide side, BigDecimal orderQty, BigDecimal displayQty, BigDecimal limitPrice, BigDecimal stopPrice) {
-        this.requestId = requestId;
         this.clientOrderId = clientOrderId;
         this.orderId = orderId;
         this.clientId = clientId;
@@ -48,10 +45,6 @@ public class MENewOrderMessage extends MEInputMessage {
         this.orderQty = orderQty;
         this.displayQty = displayQty;
         this.stopPrice = stopPrice;
-    }
-
-    public String getRequestId() {
-        return requestId;
     }
 
     public String getClientOrderId() {
@@ -104,7 +97,6 @@ public class MENewOrderMessage extends MEInputMessage {
         if (!(o instanceof MENewOrderMessage)) return false;
         MENewOrderMessage message = (MENewOrderMessage) o;
         return instrId == message.instrId &&
-                Objects.equals(requestId, message.requestId) &&
                 Objects.equals(clientOrderId, message.clientOrderId) &&
                 Objects.equals(orderId, message.orderId) &&
                 Objects.equals(clientId, message.clientId) &&
@@ -119,13 +111,12 @@ public class MENewOrderMessage extends MEInputMessage {
 
     @Override
     public int hashCode() {
-        return Objects.hash(requestId, clientOrderId, orderId, clientId, instrId, orderType, tif, side, limitPrice, orderQty, displayQty, stopPrice);
+        return Objects.hash(clientOrderId, orderId, clientId, instrId, orderType, tif, side, limitPrice, orderQty, displayQty, stopPrice);
     }
 
     @Override
     public String toString() {
         return "MENewOrderMessage{" +
-                "requestId='" + requestId + '\'' +
                 ", clientOrderId='" + clientOrderId + '\'' +
                 ", orderId='" + orderId + '\'' +
                 ", clientId='" + clientId + '\'' +
