@@ -134,8 +134,9 @@ public class METest {
     @Test
     public void testNewOrderMessage() {
         ActorRef meRef = system.actorOf(Props.create(MatchingEngine.class));
-        meRef.tell(new METimeMessage(Instant.ofEpochMilli(100)), ActorRef.noSender());
-
+        ActorRef meTimerRef = system.actorOf(Props.create(METimer.class, meRef));
+        system.scheduler().schedule(java.time.Duration.ofMillis(0),
+                java.time.Duration.ofMillis(250), meTimerRef, "getTime", system.dispatcher(), ActorRef.noSender());
         TestKit probe = new TestKit(system);
 
         meRef.tell(new MESubscribeMessage(), probe.getRef());
@@ -155,7 +156,9 @@ public class METest {
     @Test
     public void testAllTypesOfOrderMessage() {
         ActorRef meRef = system.actorOf(Props.create(MatchingEngine.class));
-        meRef.tell(new METimeMessage(Instant.ofEpochMilli(100)), ActorRef.noSender());
+        ActorRef meTimerRef = system.actorOf(Props.create(METimer.class, meRef));
+        system.scheduler().schedule(java.time.Duration.ofMillis(0),
+                java.time.Duration.ofMillis(250), meTimerRef, "getTime", system.dispatcher(), ActorRef.noSender());
         TestKit probe = new TestKit(system);
         meRef.tell(new MESubscribeMessage(), probe.getRef());
 
@@ -173,7 +176,9 @@ public class METest {
     public void testFokOrderMessage() {
 
         ActorRef meRef = system.actorOf(Props.create(MatchingEngine.class));
-        meRef.tell(new METimeMessage(Instant.ofEpochMilli(100)), ActorRef.noSender());
+        ActorRef meTimerRef = system.actorOf(Props.create(METimer.class, meRef));
+        system.scheduler().schedule(java.time.Duration.ofMillis(0),
+                java.time.Duration.ofMillis(250), meTimerRef, "getTime", system.dispatcher(), ActorRef.noSender());
         TestKit probe = new TestKit(system);
         meRef.tell(new MESubscribeMessage(), probe.getRef());
 

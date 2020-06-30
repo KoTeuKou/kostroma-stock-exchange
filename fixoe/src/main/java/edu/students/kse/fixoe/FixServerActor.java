@@ -2,6 +2,7 @@ package edu.students.kse.fixoe;
 
 import akka.actor.AbstractLoggingActor;
 import akka.actor.ActorRef;
+import edu.students.kse.me.messages.MECancelMessage;
 import edu.students.kse.me.messages.MENewOrderMessage;
 import edu.students.kse.me.messages.MEOutputMessage;
 import edu.students.kse.me.messages.MESubscribeMessage;
@@ -28,6 +29,7 @@ public class FixServerActor extends AbstractLoggingActor {
         return receiveBuilder()
                 .match(MEOutputMessage.class, this::process)
                 .match(MENewOrderMessage.class, this::process)
+                .match(MECancelMessage.class, this::process)
                 .matchAny(message -> {
                     log().warning("{} unhandled {} from {}", getSelf(), message, getSender());
                 })
@@ -74,6 +76,9 @@ public class FixServerActor extends AbstractLoggingActor {
     }
 
     private void process(MENewOrderMessage msg) {
+        meRef.tell(msg, getSender());
+    }
+    private void process(MECancelMessage msg) {
         meRef.tell(msg, getSender());
     }
 }

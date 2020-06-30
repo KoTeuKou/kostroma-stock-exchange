@@ -1,14 +1,27 @@
 package edu.students.kse.me;
 
-import akka.actor.AbstractLoggingActor;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import edu.students.kse.me.messages.METimeMessage;
 
-public class METimer extends AbstractLoggingActor {
+import java.time.Instant;
 
-    // FIXME: add timer!
+public class METimer extends AbstractActor {
+
+    private final ActorRef meRef;
+
+    public METimer(ActorRef meRef) {
+        this.meRef = meRef;
+    }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
+                .matchEquals("getTime", this::process)
                 .build();
+    }
+
+    private void process(String ignored) {
+        meRef.tell(new METimeMessage(Instant.now()), getSender());
     }
 }
