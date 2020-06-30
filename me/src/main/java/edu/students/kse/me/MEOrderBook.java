@@ -23,8 +23,8 @@ public class MEOrderBook {
     private static final BigDecimal minSize = new BigDecimal("1000");
     private final ArrayList<OrderData> bids = new ArrayList<>();
     private final ArrayList<OrderData> offers = new ArrayList<>();
-    private final ArrayList<MENewOrderMessage> stoppedLimitOffers = new ArrayList<>();
-    private final ArrayList<MENewOrderMessage> stoppedLimitBids = new ArrayList<>();
+    private final ArrayList<MENewOrderMessage> stopOffers = new ArrayList<>();
+    private final ArrayList<MENewOrderMessage> stopBids = new ArrayList<>();
     private final MEIdGenerator generator;
     private final Logger logger = LoggerFactory.getLogger(MEOrderBook.class);
 
@@ -83,31 +83,42 @@ public class MEOrderBook {
             return;
         }
 
-        // If it stop limit order add it to list till stop price will be suitable
-        if (newOrderMessage.getOrderType() == OrderType.STOP_LIMIT) {
+        // If it stop or stop limit order add it to list till stop price will be suitable
+        if (newOrderMessage.getOrderType() == OrderType.STOP_LIMIT || newOrderMessage.getOrderType() == OrderType.STOP) {
             if (newOrderMessage.getSide() == OrderSide.BID)
-                stoppedLimitBids.add(newOrderMessage);
+                stopBids.add(newOrderMessage);
             else
-                stoppedLimitOffers.add(newOrderMessage);
+                stopOffers.add(newOrderMessage);
         } else {
-            // Check for Stop Limit orders that can be added to Limit orders
+            // Check for Stop & Stop Limit orders that can be added to Limit orders
             List<MENewOrderMessage> orderMessages = new ArrayList<>();
-            if (!offers.isEmpty() && !stoppedLimitOffers.isEmpty()) {
+            if (!offers.isEmpty() && !stopOffers.isEmpty()) {
                 BigDecimal borderPriceForOffers = offers.stream().min(Comparator.comparing(OrderData::getPrice)).get().getPrice();
-                orderMessages = stoppedLimitOffers.stream()
+                orderMessages = stopOffers.stream()
                         .filter(meNewOrderMessage -> meNewOrderMessage.getStopPrice().compareTo(borderPriceForOffers) >= 0)
                         .collect(Collectors.toList());
             }
-            if (!bids.isEmpty()  && !stoppedLimitBids.isEmpty()) {
+            if (!bids.isEmpty()  && !stopBids.isEmpty()) {
                 BigDecimal borderPriceForBids = bids.stream().max(Comparator.comparing(OrderData::getPrice)).get().getPrice();
-                orderMessages.addAll(stoppedLimitBids.stream()
+                orderMessages.addAll(stopBids.stream()
                         .filter(meNewOrderMessage -> meNewOrderMessage.getStopPrice().compareTo(borderPriceForBids) <= 0)
                         .collect(Collectors.toList()));
             }
             orderMessages.add(newOrderMessage);
             for (MENewOrderMessage message : orderMessages) {
                 OrderData tempOrderData = null;
-                OrderType orderType = message.getOrderType() == OrderType.STOP_LIMIT ? OrderType.LIMIT : message.getOrderType();
+                OrderType orderType;
+                switch (message.getOrderType()){
+                    case STOP_LIMIT:
+                        orderType = OrderType.LIMIT;
+                        break;
+                    case STOP:
+                        orderType = OrderType.MARKET;
+                        break;
+                    default:
+                        orderType = message.getOrderType();
+                        break;
+                }
                 OrderTimeQualifier orderTimeQualifier = message.getTif();
                 OrderSide orderSide = message.getSide();
                 List<OrderData> orderList;
@@ -137,8 +148,7 @@ public class MEOrderBook {
                     else
                         logger.info("The opposite list of orders is empty.");
 
-                    if (orderType != OrderType.STOP_LIMIT)
-                        processingOfOrders(collector, tempOrderData, incomingOrder, orderType, orderTimeQualifier);
+                    processingOfOrders(collector, tempOrderData, incomingOrder, orderType, orderTimeQualifier);
 
                     if (tempOrderData == null)
                         break;
