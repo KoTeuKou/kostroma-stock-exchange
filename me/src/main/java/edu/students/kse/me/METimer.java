@@ -10,6 +10,13 @@ public class METimer extends AbstractActor {
 
     private final ActorRef meRef;
 
+    @Override
+    public void preStart() throws Exception {
+        super.preStart();
+        getContext().getSystem().scheduler().schedule(java.time.Duration.ofMillis(0), java.time.Duration.ofMillis(250),
+                meRef, new METimeMessage(Instant.now()), getContext().getSystem().dispatcher(), ActorRef.noSender());
+    }
+
     public METimer(ActorRef meRef) {
         this.meRef = meRef;
     }
@@ -17,11 +24,11 @@ public class METimer extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .matchEquals("getTime", this::process)
+                .match(METimeMessage.class, this::process)
                 .build();
     }
 
-    private void process(String ignored) {
-        meRef.tell(new METimeMessage(Instant.now()), getSender());
+    private void process(METimeMessage timeMessage) {
+        meRef.tell(timeMessage, getSender());
     }
 }

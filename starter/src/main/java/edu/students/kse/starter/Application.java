@@ -23,8 +23,7 @@ public class Application {
         ActorRef meRef = system.actorOf(Props.create(MatchingEngine.class));
         ActorRef fixRef = system.actorOf(Props.create(FixServerActor.class, meRef));
         ActorRef meTimerRef = system.actorOf(Props.create(METimer.class, meRef));
-        system.scheduler().schedule(java.time.Duration.ofMillis(0),
-                java.time.Duration.ofMillis(250), meTimerRef, "getTime", system.dispatcher(), ActorRef.noSender());
+
         logger.info("Application is running");
 
         Await.ready(system.whenTerminated(), Duration.apply(1, TimeUnit.DAYS));

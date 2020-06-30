@@ -5,16 +5,14 @@ import edu.students.kse.me.MEIdGenerator;
 import edu.students.kse.me.enums.OrderSide;
 import edu.students.kse.me.enums.OrderTimeQualifier;
 import edu.students.kse.me.enums.OrderType;
-import edu.students.kse.me.messages.MEExecutionReport;
-import edu.students.kse.me.messages.MENewOrderMessage;
-import edu.students.kse.me.messages.MEOutputMessage;
-import edu.students.kse.me.messages.TransactionComplete;
+import edu.students.kse.me.messages.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import quickfix.*;
 import quickfix.field.*;
 import quickfix.fix50sp2.ExecutionReport;
 import quickfix.fix50sp2.NewOrderSingle;
+import quickfix.fix50sp2.OrderCancelRequest;
 import quickfix.mina.acceptor.DynamicAcceptorSessionProvider;
 
 import java.io.InputStream;
@@ -80,8 +78,15 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
     @Override
     public void onMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
 
-        MENewOrderMessage meOrderMessage = getConvertedMessage(message, sessionID);
+        MENewOrderMessage meOrderMessage = getConvertedNewOrderMessage(message, sessionID);
         fsaRef.tell(meOrderMessage, ActorRef.noSender());
+        logger.info("FIX message sent to ME");
+    }
+
+    @Override
+    public void onMessage(OrderCancelRequest message, SessionID sessionID) throws FieldNotFound, UnsupportedMessageType, IncorrectTagValue {
+        MECancelMessage cancelMessage = getConvertedCancelOrderMessage(message, sessionID);
+        fsaRef.tell(cancelMessage, ActorRef.noSender());
         logger.info("FIX message sent to ME");
     }
 
@@ -165,7 +170,7 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         }
     }
 
-    private MENewOrderMessage getConvertedMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
+    private MENewOrderMessage getConvertedNewOrderMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
         String reqId = message.getString(TradeRequestID.FIELD);
         String clOrdId = message.getString(ClOrdID.FIELD);
         String clId = message.getString(ClientID.FIELD);
@@ -179,6 +184,16 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         BigDecimal stopPrice = new BigDecimal(message.getString(StopPx.FIELD));
         String orderId = generator.getNextOrderId();
         return new MENewOrderMessage(reqId, clOrdId, orderId, clId, instrId, ordType, tif, side, orderQty, displayQty, limitPrice, stopPrice);
+    }
+
+    private MECancelMessage getConvertedCancelOrderMessage(OrderCancelRequest message, SessionID sessionID) throws FieldNotFound {
+        String clOrdId = message.getString(ClOrdID.FIELD);
+        String clId = message.getString(ClientID.FIELD);
+        long instrId = message.getString(Symbol.FIELD).hashCode();
+        String originalClientOrderId = message.getString(OrigClOrdID.FIELD);
+        String orderId = generator.getNextOrderId();
+        OrderSide side = OrderSide.getEnumByValue(message.getString(Side.FIELD));
+        return new MECancelMessage(clOrdId, clId, originalClientOrderId, orderId, instrId, side);
     }
 
     // Dynamic sessions:
