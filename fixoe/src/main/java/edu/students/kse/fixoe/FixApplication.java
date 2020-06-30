@@ -184,7 +184,10 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         OrderSide side = OrderSide.getEnumByValue(message.getString(Side.FIELD));
         BigDecimal orderQty = new BigDecimal(message.getString(OrderQty.FIELD));
         BigDecimal limitPrice = new BigDecimal(message.getString(Price.FIELD));
-        BigDecimal stopPrice = new BigDecimal(message.getString(StopPx.FIELD));
+        BigDecimal stopPrice = null;
+        if (ordType == OrderType.STOP || ordType == OrderType.STOP_LIMIT) {
+            stopPrice = new BigDecimal(message.getString(StopPx.FIELD));
+        }
         String orderId = generator.getNextOrderId();
         return new MENewOrderMessage(clOrdId, orderId, clId, instrId, ordType, tif, side, orderQty, orderQty, limitPrice, stopPrice);
     }
