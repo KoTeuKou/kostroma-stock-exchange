@@ -177,13 +177,22 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
 
     private MENewOrderMessage getConvertedNewOrderMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
         String clOrdId = message.getString(ClOrdID.FIELD);
-        String clId = message.getString(ClientID.FIELD);
+        String clId = message.getString(SenderCompID.FIELD);
         long instrId = message.getString(Symbol.FIELD).hashCode();
         OrderType ordType = OrderType.getEnumByValue(message.getString(OrdType.FIELD));
-        OrderTimeQualifier tif = OrderTimeQualifier.getEnumByValue(message.getString(TimeInForce.FIELD));
+        OrderTimeQualifier tif;
+        if (message.getString(TimeInForce.FIELD) != null) {
+            tif = OrderTimeQualifier.getEnumByValue(message.getString(TimeInForce.FIELD));
+        }
+        else {
+            tif = OrderTimeQualifier.GOOD_TILL_CANCEL;
+        }
         OrderSide side = OrderSide.getEnumByValue(message.getString(Side.FIELD));
         BigDecimal orderQty = new BigDecimal(message.getString(OrderQty.FIELD));
-        BigDecimal limitPrice = new BigDecimal(message.getString(Price.FIELD));
+        BigDecimal limitPrice = null;
+        if (ordType == OrderType.LIMIT || ordType == OrderType.STOP_LIMIT) {
+            limitPrice = new BigDecimal(message.getString(Price.FIELD));
+        }
         BigDecimal stopPrice = null;
         if (ordType == OrderType.STOP || ordType == OrderType.STOP_LIMIT) {
             stopPrice = new BigDecimal(message.getString(StopPx.FIELD));
@@ -194,7 +203,7 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
 
     private MECancelMessage getConvertedCancelOrderMessage(OrderCancelRequest message, SessionID sessionID) throws FieldNotFound {
         String clOrdId = message.getString(ClOrdID.FIELD);
-        String clId = message.getString(ClientID.FIELD);
+        String clId = message.getString(SenderCompID.FIELD);
         long instrId = message.getString(Symbol.FIELD).hashCode();
         String originalClientOrderId = message.getString(OrigClOrdID.FIELD);
         String orderId = generator.getNextOrderId();
