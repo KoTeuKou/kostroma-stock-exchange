@@ -6,10 +6,7 @@ import edu.students.kse.me.messages.MEExecutionReport;
 import edu.students.kse.me.messages.MENewOrderMessage;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -21,8 +18,10 @@ public class MEOrderBook {
 
     private final long instrumentId;
     private static final BigDecimal minSize = new BigDecimal("1000");
-    private final ArrayList<OrderData> bids = new ArrayList<>();
-    private final ArrayList<OrderData> offers = new ArrayList<>();
+    private final TreeSet<OrderData> bids = new TreeSet<>(Comparator.comparing(OrderData::getPrice).reversed()
+            .thenComparing(OrderData::getTransactionId));
+    private final TreeSet<OrderData> offers = new TreeSet<>(Comparator.comparing(OrderData::getPrice)
+            .thenComparing(OrderData::getTransactionId));
     private final ArrayList<MENewOrderMessage> stopOffers = new ArrayList<>();
     private final ArrayList<MENewOrderMessage> stopBids = new ArrayList<>();
     private final MEIdGenerator generator;
@@ -36,7 +35,7 @@ public class MEOrderBook {
 
     public void process(MECancelMessage meCancelMessage, TransactionBuilder collector){
         OrderData reqOrderData;
-        ArrayList<OrderData> orders;
+        TreeSet<OrderData> orders;
         if (meCancelMessage.getSide() == OrderSide.BID){
             orders = bids;
         }
@@ -122,7 +121,7 @@ public class MEOrderBook {
                 }
                 OrderTimeQualifier orderTimeQualifier = message.getTif();
                 OrderSide orderSide = message.getSide();
-                List<OrderData> orderList;
+                TreeSet<OrderData> orderList;
                 if (orderSide == OrderSide.BID){
                     orderList = offers;
                 }
@@ -135,17 +134,9 @@ public class MEOrderBook {
                         message.getOrderQty(), message.getOrderQty());
 
                 while (incomingOrder.getLeavesQty().compareTo(minSize) > 0) {
-                    // transactionId acts as time counter
-                    Comparator<OrderData> priceComparator = Comparator.comparing(OrderData::getPrice);
-                    if (orderSide == OrderSide.OFFER){
-                        priceComparator = priceComparator.reversed();
-                    }
 
-                    List<OrderData> sortedOrderList = orderList.stream()
-                            .sorted(priceComparator.thenComparing(OrderData::getTransactionId)).collect(Collectors.toList());
-
-                    if (!sortedOrderList.isEmpty())
-                        tempOrderData = findSuitablePair(orderType, incomingOrder, sortedOrderList, orderTimeQualifier);
+                    if (!orderList.isEmpty())
+                        tempOrderData = findSuitablePair(orderType, incomingOrder, orderList, orderTimeQualifier);
                     else
                         logger.info("The opposite list of orders is empty.");
 
@@ -159,7 +150,7 @@ public class MEOrderBook {
         }
     }
 
-    private OrderData findSuitablePair(OrderType orderType, OrderData incomingOrder, List<OrderData> ordersList, OrderTimeQualifier tif) {
+    private OrderData findSuitablePair(OrderType orderType, OrderData incomingOrder, TreeSet<OrderData> ordersList, OrderTimeQualifier tif) {
 
         Predicate<OrderData> incomingOrderPriceGreaterThanOrderOnBook = orderData -> orderData.getPrice().compareTo(incomingOrder.getPrice()) <= 0;
         Predicate<OrderData> incomingOrderPriceLessThanOrderOnBook = orderData -> orderData.getPrice().compareTo(incomingOrder.getPrice()) >= 0;
@@ -303,11 +294,11 @@ public class MEOrderBook {
         return instrumentId;
     }
 
-    /* package */ List<OrderData> getBids() {
+    /* package */ TreeSet<OrderData> getBids() {
         return bids;
     }
 
-    /* package */ List<OrderData> getOffers() {
+    /* package */ TreeSet<OrderData> getOffers() {
         return offers;
     }
 
