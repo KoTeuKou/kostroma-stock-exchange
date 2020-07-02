@@ -1,15 +1,15 @@
 package edu.students.kse.me.enums;
 
 public enum OrderStatus {
-    NEW((byte) 0), PARTIALLY_FILLED((byte) 1), FILLED((byte) 2), CANCELLED((byte) 4) , REJECTED((byte) 8);
+    NEW('0'), PARTIALLY_FILLED('1'), FILLED('2'), CANCELLED('4') , REJECTED('8');
 
-    private final byte orderStatusCode;
+    private final char orderStatusCode;
 
-    OrderStatus(byte orderStatusCode) {
+    OrderStatus(char orderStatusCode) {
         this.orderStatusCode = orderStatusCode;
     }
 
-    public byte getCode() {
+    public char getCode() {
         return orderStatusCode;
     }
 

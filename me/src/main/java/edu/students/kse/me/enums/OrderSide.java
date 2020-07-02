@@ -1,15 +1,15 @@
 package edu.students.kse.me.enums;
 
 public enum OrderSide {
-    BID((byte) 1), OFFER((byte)2);
+    BID('1'), OFFER('2');
 
-    private final byte orderSideCode;
+    private final char orderSideCode;
 
-    OrderSide(byte orderSideCode) {
+    OrderSide(char orderSideCode) {
         this.orderSideCode = orderSideCode;
     }
 
-    public byte getCode() {
+    public char getCode() {
         return orderSideCode;
     }
 

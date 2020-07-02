@@ -1,15 +1,15 @@
 package edu.students.kse.me.enums;
 
 public enum TradeType {
-    REGULAR((byte) 0), AUCTION((byte) 1);
+    REGULAR('0'), AUCTION('1');
 
-    private final byte tradeTypeCode;
+    private final char tradeTypeCode;
 
-    TradeType(byte tradeTypeCode) {
+    TradeType(char tradeTypeCode) {
         this.tradeTypeCode = tradeTypeCode;
     }
 
-    public byte getCode() {
+    public char getCode() {
         return tradeTypeCode;
     }
 

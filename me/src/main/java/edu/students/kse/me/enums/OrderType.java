@@ -1,15 +1,15 @@
 package edu.students.kse.me.enums;
 
 public enum OrderType {
-   MARKET((byte) 1), LIMIT((byte) 2), STOP((byte) 3), STOP_LIMIT((byte) 4);
+   MARKET('1'), LIMIT('2'), STOP('3'), STOP_LIMIT('4');
 
-   private final byte orderTypeCode;
+   private final char orderTypeCode;
 
-   OrderType(byte orderTypeCode) {
+   OrderType(char orderTypeCode) {
       this.orderTypeCode = orderTypeCode;
    }
 
-   public byte getCode() {
+   public char getCode() {
       return orderTypeCode;
    }
 

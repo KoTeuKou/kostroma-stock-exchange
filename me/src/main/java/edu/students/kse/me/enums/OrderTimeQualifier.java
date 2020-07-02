@@ -1,15 +1,15 @@
 package edu.students.kse.me.enums;
 
 public enum OrderTimeQualifier {
-    GOOD_TILL_CANCEL((byte) 1), IMMEDIATE_OR_CANCEL((byte) 3), FILL_OR_KILL((byte) 4);
+    GOOD_TILL_CANCEL('1'), IMMEDIATE_OR_CANCEL('3'), FILL_OR_KILL('4');
 
-    private final byte tifCode;
+    private final char tifCode;
 
-    OrderTimeQualifier(byte tifCode) {
+    OrderTimeQualifier(char tifCode) {
         this.tifCode = tifCode;
     }
 
-    public byte getCode() {
+    public char getCode() {
         return tifCode;
     }
 
