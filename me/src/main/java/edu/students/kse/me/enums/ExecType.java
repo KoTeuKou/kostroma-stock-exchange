@@ -12,25 +12,4 @@ public enum ExecType {
     public char getCode() {
         return execTypeCode;
     }
-
-    public static ExecType getEnumByValue(String value){
-        ExecType res;
-        switch (value){
-            case "0":
-                res = NEW;
-                break;
-            case "4":
-                res = CANCELLED;
-                break;
-            case "8":
-                res = REJECTED;
-                break;
-            case "F":
-                res = TRADE;
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + value);
-        }
-        return res;
-    }
 }

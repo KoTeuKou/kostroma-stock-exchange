@@ -38,7 +38,7 @@ jar {
 }
 
 task createRpm(type: Rpm, dependsOn: jar) {
-    release            '1.0'
+    release            System.getenv('CI_PIPELINE_IID') ?: "1.0"
     packageName        'kse.dmitry.lapushkin'
     summary            'Kostroma Stock Exchange'
     packageDescription 'Kostroma Stock Exchange'

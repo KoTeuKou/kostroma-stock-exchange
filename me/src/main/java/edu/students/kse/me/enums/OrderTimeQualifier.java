@@ -12,22 +12,4 @@ public enum OrderTimeQualifier {
     public char getCode() {
         return tifCode;
     }
-
-    public static OrderTimeQualifier getEnumByValue(String value){
-        OrderTimeQualifier res;
-        switch (value){
-            case "1":
-                res = GOOD_TILL_CANCEL;
-                break;
-            case "3":
-                res = IMMEDIATE_OR_CANCEL;
-                break;
-            case "4":
-                res = FILL_OR_KILL;
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + value);
-        }
-        return res;
-    }
 }

@@ -14,6 +14,7 @@ import quickfix.fix50sp2.ExecutionReport;
 import quickfix.fix50sp2.NewOrderSingle;
 import quickfix.fix50sp2.OrderCancelRequest;
 import quickfix.mina.acceptor.DynamicAcceptorSessionProvider;
+import util.FixFieldMapper;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -189,15 +190,15 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         String clId =  message.getHeader().getString(SenderCompID.FIELD);
         String symbol = message.getString(Symbol.FIELD);
         long instrId = symbol.hashCode();
-        OrderType ordType = OrderType.getEnumByValue(message.getString(OrdType.FIELD));
+        OrderType ordType = FixFieldMapper.getOrderTypeByValue(message.getString(OrdType.FIELD));
         OrderTimeQualifier tif;
         if (message.isSetField(TimeInForce.FIELD)) {
-            tif = OrderTimeQualifier.getEnumByValue(message.getString(TimeInForce.FIELD));
+            tif = FixFieldMapper.getOrderTimeQualifierByValue(message.getString(TimeInForce.FIELD));
         }
         else {
             tif = OrderTimeQualifier.GOOD_TILL_CANCEL;
         }
-        OrderSide side = OrderSide.getEnumByValue(message.getString(Side.FIELD));
+        OrderSide side = FixFieldMapper.getOrderSideByValue(message.getString(Side.FIELD));
         BigDecimal orderQty = new BigDecimal(message.getString(OrderQty.FIELD));
         BigDecimal limitPrice = null;
         if (ordType == OrderType.LIMIT || ordType == OrderType.STOP_LIMIT) {
@@ -218,7 +219,7 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         long instrId = symbol.hashCode();
         String originalClientOrderId = message.getString(OrigClOrdID.FIELD);
         String orderId = generator.getNextOrderId();
-        OrderSide side = OrderSide.getEnumByValue(message.getString(Side.FIELD));
+        OrderSide side = FixFieldMapper.getOrderSideByValue(message.getString(Side.FIELD));
         return new MECancelMessage(clOrdId, clId, originalClientOrderId, orderId, instrId, side, symbol);
     }
 

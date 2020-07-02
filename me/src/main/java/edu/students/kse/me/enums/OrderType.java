@@ -12,25 +12,4 @@ public enum OrderType {
    public char getCode() {
       return orderTypeCode;
    }
-
-   public static OrderType getEnumByValue(String value){
-      OrderType res;
-      switch (value){
-         case "1":
-            res = MARKET;
-            break;
-         case "2":
-            res = LIMIT;
-            break;
-         case "3":
-            res = STOP;
-            break;
-         case "4":
-            res = STOP_LIMIT;
-            break;
-         default:
-            throw new IllegalStateException("Unexpected value: " + value);
-      }
-      return res;
-   }
 }

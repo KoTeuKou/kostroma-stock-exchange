@@ -12,19 +12,4 @@ public enum TradeType {
     public char getCode() {
         return tradeTypeCode;
     }
-
-    public static TradeType getEnumByValue(String value){
-        TradeType res;
-        switch (value){
-            case "0":
-                res = REGULAR;
-                break;
-            case "1":
-                res = AUCTION;
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + value);
-        }
-        return res;
-    }
 }
