@@ -79,14 +79,14 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
     @Override
     public void onMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
 
-        MENewOrderMessage meOrderMessage = getConvertedNewOrderMessage(message, sessionID);
+        MENewOrderMessage meOrderMessage = getConvertedNewOrderMessage(message);
         fsaRef.tell(meOrderMessage, ActorRef.noSender());
         logger.info("FIX message sent to ME");
     }
 
     @Override
     public void onMessage(OrderCancelRequest message, SessionID sessionID) throws FieldNotFound, UnsupportedMessageType, IncorrectTagValue {
-        MECancelMessage cancelMessage = getConvertedCancelOrderMessage(message, sessionID);
+        MECancelMessage cancelMessage = getConvertedCancelOrderMessage(message);
         fsaRef.tell(cancelMessage, ActorRef.noSender());
         logger.info("FIX message sent to ME");
     }
@@ -108,7 +108,6 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
     @Override
     public void onCreate(SessionID sessionId) {
         Session session = Session.lookupSession(sessionId);
-
         if (session == null)
             return;
 
@@ -149,8 +148,10 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         // TODO: getting sessionId
         try {
             quickfix.fix50sp2.Message outputMessage = getOutputMessage(msg);
+            logger.info("CREATED SESSIONS: " + createdSessions.size());
             if (outputMessage != null) {
                 createdSessions.values().forEach((session) -> {
+                    logger.info("SESSION ID: " + session.getSessionID().toString());
                     session.send(outputMessage);
                 });
             }
@@ -175,13 +176,13 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         }
     }
 
-    private MENewOrderMessage getConvertedNewOrderMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
+    private MENewOrderMessage getConvertedNewOrderMessage(NewOrderSingle message) throws FieldNotFound {
         String clOrdId = message.getString(ClOrdID.FIELD);
-        String clId = message.getString(SenderCompID.FIELD);
+        String clId =  message.getHeader().getString(SenderCompID.FIELD);
         long instrId = message.getString(Symbol.FIELD).hashCode();
         OrderType ordType = OrderType.getEnumByValue(message.getString(OrdType.FIELD));
         OrderTimeQualifier tif;
-        if (message.getString(TimeInForce.FIELD) != null) {
+        if (message.isSetField(TimeInForce.FIELD)) {
             tif = OrderTimeQualifier.getEnumByValue(message.getString(TimeInForce.FIELD));
         }
         else {
@@ -201,9 +202,9 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
         return new MENewOrderMessage(clOrdId, orderId, clId, instrId, ordType, tif, side, orderQty, orderQty, limitPrice, stopPrice);
     }
 
-    private MECancelMessage getConvertedCancelOrderMessage(OrderCancelRequest message, SessionID sessionID) throws FieldNotFound {
+    private MECancelMessage getConvertedCancelOrderMessage(OrderCancelRequest message) throws FieldNotFound {
         String clOrdId = message.getString(ClOrdID.FIELD);
-        String clId = message.getString(SenderCompID.FIELD);
+        String clId = message.getHeader().getString(SenderCompID.FIELD);
         long instrId = message.getString(Symbol.FIELD).hashCode();
         String originalClientOrderId = message.getString(OrigClOrdID.FIELD);
         String orderId = generator.getNextOrderId();

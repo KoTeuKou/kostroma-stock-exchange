@@ -133,7 +133,7 @@ public class MEOrderBook {
                         message.getClientOrderId(), message.getOrderId(), orderSide, message.getLimitPrice(),
                         message.getOrderQty(), message.getOrderQty());
 
-                while (incomingOrder.getLeavesQty().compareTo(minSize) > 0) {
+                while (incomingOrder.getLeavesQty().compareTo(minSize) >= 0) {
 
                     if (!orderList.isEmpty())
                         tempOrderData = findSuitablePair(orderType, incomingOrder, orderList, orderTimeQualifier);
