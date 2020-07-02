@@ -30,7 +30,9 @@ public class OrderData {
     // leaves qty
     private BigDecimal leavesQty;
 
-    public OrderData(long instrumentId, long transactionId, String clientId, String clientOrderId, String orderId, OrderSide side, BigDecimal price, BigDecimal qty, BigDecimal leavesQty) {
+    private final String symbol;
+
+    public OrderData(long instrumentId, long transactionId, String clientId, String clientOrderId, String orderId, OrderSide side, BigDecimal price, BigDecimal qty, BigDecimal leavesQty, String symbol) {
         this.instrumentId = instrumentId;
         this.transactionId = transactionId;
         this.clientId = clientId;
@@ -40,6 +42,7 @@ public class OrderData {
         this.price = price;
         this.qty = qty;
         this.leavesQty = leavesQty;
+        this.symbol = symbol;
     }
 
 
@@ -111,6 +114,10 @@ public class OrderData {
         this.price = price;
     }
 
+    public String getSymbol() {
+        return symbol;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -124,12 +131,13 @@ public class OrderData {
                 side == orderData.side &&
                 Objects.equals(price, orderData.price) &&
                 Objects.equals(qty, orderData.qty) &&
-                Objects.equals(leavesQty, orderData.leavesQty);
+                Objects.equals(leavesQty, orderData.leavesQty)  &&
+                Objects.equals(symbol, orderData.symbol);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(instrumentId, transactionId, clientId, clientOrderId, orderId, side, price, qty, leavesQty);
+        return Objects.hash(instrumentId, transactionId, clientId, clientOrderId, orderId, side, price, qty, leavesQty, symbol);
     }
 
     @Override
@@ -144,6 +152,7 @@ public class OrderData {
                 ", price=" + price +
                 ", qty=" + qty +
                 ", leavesQty=" + leavesQty +
+                ", symbol=" + symbol +
                 '}';
     }
 

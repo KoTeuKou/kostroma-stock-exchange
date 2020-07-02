@@ -15,7 +15,6 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -41,7 +40,7 @@ public class METest {
             new BigDecimal("1"),
             new BigDecimal("5000"),
             null,
-            null);
+            null, "AAPL");
 
     MENewOrderMessage marketBuyOrder = new MENewOrderMessage(
             "clientOrderId2",
@@ -53,7 +52,7 @@ public class METest {
             new BigDecimal("10000"),
             new BigDecimal("10000"),
             null,
-            null);
+            null, "AAPL");
 
     MENewOrderMessage limitSellOrder = new MENewOrderMessage(
             "clientOrderId3",
@@ -65,7 +64,7 @@ public class METest {
             new BigDecimal("4000"),
             new BigDecimal("4000"),
             new BigDecimal("300"),
-            null);
+            null, "AAPL");
 
     MENewOrderMessage stopLimitSellOrder = new MENewOrderMessage(
             "clientOrderId4",
@@ -77,7 +76,7 @@ public class METest {
             new BigDecimal("10000"),
             new BigDecimal("10000"),
             new BigDecimal("1000"),
-            new BigDecimal("600"));
+            new BigDecimal("600"), "AAPL");
 
     MECancelMessage cancelOrder = new MECancelMessage(
             "requestId5",
@@ -85,7 +84,7 @@ public class METest {
             "clientOrderId3",
             "clientOrderId3",
             1L,
-            OrderSide.OFFER);
+            OrderSide.OFFER, "AAPL");
 
     MENewOrderMessage limitSellOrder2 = new MENewOrderMessage(
             "clientOrderId7",
@@ -97,7 +96,7 @@ public class METest {
             new BigDecimal("3000"),
             new BigDecimal("3000"),
             new BigDecimal("300"),
-            null);
+            null, "AAPL");
 
     MENewOrderMessage limitSellOrder3 = new MENewOrderMessage(
             "clientOrderId9",
@@ -109,7 +108,7 @@ public class METest {
             new BigDecimal("1000"),
             new BigDecimal("1000"),
             new BigDecimal("300"),
-            null);
+            null, "AAPL");
 
     MENewOrderMessage limitBuyOrder = new MENewOrderMessage(
             "clientOrderId6",
@@ -121,7 +120,7 @@ public class METest {
             new BigDecimal("7000"),
             new BigDecimal("7000"),
             new BigDecimal("400"),
-            null);
+            null, "AAPL");
 
 
     @Test

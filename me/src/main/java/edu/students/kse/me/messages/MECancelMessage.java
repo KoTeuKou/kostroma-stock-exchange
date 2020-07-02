@@ -18,13 +18,16 @@ public class MECancelMessage extends MEInputMessage  {
 
     private final OrderSide side;
 
-    public MECancelMessage(String clientOrderId, String clientId, String originalClientOrderId, String orderId, long instrId, OrderSide side) {
+    private final String symbol;
+
+    public MECancelMessage(String clientOrderId, String clientId, String originalClientOrderId, String orderId, long instrId, OrderSide side, String symbol) {
         this.clientOrderId = clientOrderId;
         this.clientId = clientId;
         this.originalClientOrderId = originalClientOrderId;
         this.orderId = orderId;
         this.instrId = instrId;
         this.side = side;
+        this.symbol = symbol;
     }
 
     public String getClientOrderId() {
@@ -51,6 +54,10 @@ public class MECancelMessage extends MEInputMessage  {
         return side;
     }
 
+    public String getSymbol() {
+        return symbol;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -61,12 +68,13 @@ public class MECancelMessage extends MEInputMessage  {
                 Objects.equals(clientId, that.clientId) &&
                 Objects.equals(originalClientOrderId, that.originalClientOrderId) &&
                 Objects.equals(orderId, that.orderId) &&
+                Objects.equals(symbol, that.symbol) &&
                 side == that.side;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(clientOrderId, clientId, originalClientOrderId, orderId, instrId, side);
+        return Objects.hash(clientOrderId, clientId, originalClientOrderId, orderId, instrId, side, symbol);
     }
 
     @Override
@@ -78,6 +86,7 @@ public class MECancelMessage extends MEInputMessage  {
                 ", orderId='" + orderId + '\'' +
                 ", instrId=" + instrId +
                 ", side=" + side +
+                ", symbol=" + symbol +
                 '}';
     }
 }

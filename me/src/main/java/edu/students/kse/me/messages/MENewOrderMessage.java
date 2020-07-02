@@ -31,9 +31,10 @@ public class MENewOrderMessage extends MEInputMessage {
 
     private final BigDecimal stopPrice;
 
+    private final String symbol;
 
     public MENewOrderMessage(String clientOrderId, String orderId, String clientId, long instrId, OrderType orderType, OrderTimeQualifier tif,
-                             OrderSide side, BigDecimal orderQty, BigDecimal displayQty, BigDecimal limitPrice, BigDecimal stopPrice) {
+                             OrderSide side, BigDecimal orderQty, BigDecimal displayQty, BigDecimal limitPrice, BigDecimal stopPrice, String symbol) {
         this.clientOrderId = clientOrderId;
         this.orderId = orderId;
         this.clientId = clientId;
@@ -45,6 +46,7 @@ public class MENewOrderMessage extends MEInputMessage {
         this.orderQty = orderQty;
         this.displayQty = displayQty;
         this.stopPrice = stopPrice;
+        this.symbol = symbol;
     }
 
     public String getClientOrderId() {
@@ -91,6 +93,10 @@ public class MENewOrderMessage extends MEInputMessage {
         return stopPrice;
     }
 
+    public String getSymbol() {
+        return symbol;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -106,12 +112,13 @@ public class MENewOrderMessage extends MEInputMessage {
                 Objects.equals(limitPrice, message.limitPrice) &&
                 Objects.equals(orderQty, message.orderQty) &&
                 Objects.equals(displayQty, message.displayQty) &&
-                Objects.equals(stopPrice, message.stopPrice);
+                Objects.equals(stopPrice, message.stopPrice) &&
+                Objects.equals(symbol, message.symbol);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(clientOrderId, orderId, clientId, instrId, orderType, tif, side, limitPrice, orderQty, displayQty, stopPrice);
+        return Objects.hash(clientOrderId, orderId, clientId, instrId, orderType, tif, side, limitPrice, orderQty, displayQty, stopPrice, symbol);
     }
 
     @Override
@@ -128,6 +135,7 @@ public class MENewOrderMessage extends MEInputMessage {
                 ", orderQty=" + orderQty +
                 ", displayQty=" + displayQty +
                 ", stopPrice=" + stopPrice +
+                ", symbol=" + symbol +
                 '}';
     }
 }
