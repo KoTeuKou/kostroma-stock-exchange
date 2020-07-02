@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public class MEOrderBook {
 
     private final long instrumentId;
-    private static final BigDecimal minSize = new BigDecimal("1000");
+    private static final BigDecimal minSize = new BigDecimal("10");
     private final TreeSet<OrderData> bids = new TreeSet<>(Comparator.comparing(OrderData::getPrice).reversed()
             .thenComparing(OrderData::getTransactionId));
     private final TreeSet<OrderData> offers = new TreeSet<>(Comparator.comparing(OrderData::getPrice)
@@ -51,13 +51,15 @@ public class MEOrderBook {
                 orders.remove(reqOrderData);
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), meCancelMessage.getClientId(),
                         meCancelMessage.getClientOrderId(), reqOrderData.getOrderId(), ExecType.CANCELLED, OrderStatus.CANCELLED,
-                        reqOrderData.getPrice(), reqOrderData.getLeavesQty(), null, null, reqOrderData.getSide(), null));
+                        reqOrderData.getPrice(), reqOrderData.getLeavesQty(), BigDecimal.ZERO, BigDecimal.ZERO,
+                        reqOrderData.getSide(), null, instrumentId, reqOrderData.getSymbol()));
                 logger.info("Order with Id: {} has been removed by cancel message.", reqOrderData.getOrderId());
             }
             else {
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), meCancelMessage.getClientId(),
                         meCancelMessage.getClientOrderId(), meCancelMessage.getOrderId(), ExecType.REJECTED, OrderStatus.REJECTED,
-                        null, null, null, null, meCancelMessage.getSide(), null));
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, meCancelMessage.getSide(),
+                        null, instrumentId, meCancelMessage.getSymbol()));
                 logger.error("Access to order cancellation is denied. Reason: real clientId: {}, submitted clientId: {}.",
                         reqOrderData.getClientId(), meCancelMessage.getClientId());
             }
@@ -66,7 +68,8 @@ public class MEOrderBook {
         else {
             collector.add(new MEExecutionReport(generator.getNextExecutionId(), meCancelMessage.getClientId(),
                     meCancelMessage.getClientOrderId(), meCancelMessage.getOrderId(), ExecType.REJECTED, OrderStatus.REJECTED,
-                    null, null, null, null, meCancelMessage.getSide(), null));
+                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, meCancelMessage.getSide(),
+                    null, instrumentId, meCancelMessage.getSymbol()));
             logger.error("ClientOrderId: {} for order-cancellation doesn't exist.", meCancelMessage.getOriginalClientOrderId());
         }
     }
@@ -79,7 +82,7 @@ public class MEOrderBook {
             collector.add(new MEExecutionReport(generator.getNextExecutionId(), newOrderMessage.getClientId(),
                     newOrderMessage.getClientOrderId(), newOrderMessage.getOrderId(), ExecType.REJECTED,
                     OrderStatus.REJECTED, newOrderMessage.getLimitPrice(), newOrderMessage.getOrderQty(),
-                    null, null, newOrderMessage.getSide(), null));
+                    BigDecimal.ZERO, BigDecimal.ZERO, newOrderMessage.getSide(), null, instrumentId, newOrderMessage.getSymbol()));
             return;
         }
 
@@ -131,7 +134,7 @@ public class MEOrderBook {
 
                 OrderData incomingOrder = new OrderData(message.getInstrId(), generator.getNextTransactionId(), message.getClientId(),
                         message.getClientOrderId(), message.getOrderId(), orderSide, message.getLimitPrice(),
-                        message.getOrderQty(), message.getOrderQty());
+                        message.getOrderQty(), message.getOrderQty(), message.getSymbol());
 
                 while (incomingOrder.getLeavesQty().compareTo(minSize) >= 0) {
 
@@ -200,6 +203,14 @@ public class MEOrderBook {
             BigDecimal incomingQty = incomingOrder.getLeavesQty();
             BigDecimal existedQty = tempOrderData.getLeavesQty();
             BigDecimal executedQty = incomingQty.min(existedQty);
+
+            BigDecimal executedPrice;
+            if (orderType == OrderType.MARKET) {
+                executedPrice = tempOrderData.getPrice();
+            }
+            else {
+                executedPrice = incomingQty;
+            }
             tempOrderData.setLeavesQty(existedQty.subtract(incomingQty).max(BigDecimal.ZERO));
             incomingOrder.setLeavesQty(incomingQty.subtract(existedQty).max(BigDecimal.ZERO));
 
@@ -217,21 +228,22 @@ public class MEOrderBook {
             String matchId = generator.getNextMatchId();
 
             collector.add(new METradeMessage(matchId, buyOrder.getClientId(), sellOrder.getClientId(), buyOrder.getOrderId(),
-                    sellOrder.getOrderId(), executedQty, tempOrderData.getPrice(), incomingOrder.getInstrumentId(), TradeType.REGULAR));
+                    sellOrder.getOrderId(), executedQty, executedPrice, incomingOrder.getInstrumentId(), TradeType.REGULAR));
             logger.info("Successful trade between of buy-order: {} and sell-order: {}", buyOrder.getOrderId(), sellOrder.getOrderId());
             // Reports for incoming order
             // Filled
             if (incomingOrder.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
                         incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.TRADE, OrderStatus.FILLED,
-                        incomingOrder.getPrice(), incomingOrder.getLeavesQty(), tempOrderData.getPrice(), executedQty, incomingOrder.getSide(), matchId));
+                        incomingOrder.getPrice(), incomingOrder.getLeavesQty(), executedPrice, executedQty,
+                        incomingOrder.getSide(), matchId, instrumentId, incomingOrder.getSymbol()));
             }
             // Partially filled
             else {
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
                         incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.TRADE,
-                        OrderStatus.PARTIALLY_FILLED,  incomingOrder.getPrice(), incomingOrder.getLeavesQty(),
-                        tempOrderData.getPrice(), executedQty, incomingOrder.getSide(), matchId));
+                        OrderStatus.PARTIALLY_FILLED,  executedPrice, incomingOrder.getLeavesQty(),
+                        tempOrderData.getPrice(), executedQty, incomingOrder.getSide(), matchId, instrumentId,  incomingOrder.getSymbol()));
             }
             // Reports for existed order
 
@@ -244,14 +256,15 @@ public class MEOrderBook {
                 logger.info("Order with id: {} has been removed due to its completion.", tempOrderData.getOrderId());
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), tempOrderData.getClientId(),
                         tempOrderData.getClientOrderId(), tempOrderData.getOrderId(), ExecType.TRADE, OrderStatus.FILLED,
-                        tempOrderData.getPrice(), tempOrderData.getLeavesQty(), tempOrderData.getPrice(), existedQty, tempOrderData.getSide(), matchId));
+                        tempOrderData.getPrice(), tempOrderData.getLeavesQty(), executedPrice, existedQty,
+                        tempOrderData.getSide(), matchId, instrumentId,  tempOrderData.getSymbol()));
             }
             // Partially filled
             else {
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), tempOrderData.getClientId(),
                         tempOrderData.getClientOrderId(), tempOrderData.getOrderId(), ExecType.TRADE,
-                        OrderStatus.PARTIALLY_FILLED, incomingOrder.getPrice(), incomingOrder.getLeavesQty(),
-                        tempOrderData.getPrice(), executedQty, tempOrderData.getSide(), matchId));
+                        OrderStatus.PARTIALLY_FILLED, executedPrice, incomingOrder.getLeavesQty(),
+                        tempOrderData.getPrice(), executedQty, tempOrderData.getSide(), matchId, instrumentId, tempOrderData.getSymbol()));
                 // Cancelled cause not enough qty for trading
                 if (tempOrderData.getLeavesQty().compareTo(minSize) < 0) {
                     if (tempOrderData.getSide() == OrderSide.BID)
@@ -262,7 +275,8 @@ public class MEOrderBook {
                     collector.add(new MEExecutionReport(generator.getNextExecutionId(), tempOrderData.getClientId(),
                             tempOrderData.getClientOrderId(), tempOrderData.getOrderId(), ExecType.CANCELLED,
                             OrderStatus.CANCELLED, tempOrderData.getPrice(), tempOrderData.getLeavesQty(),
-                            tempOrderData.getPrice(), tempOrderData.getLeavesQty(), tempOrderData.getSide(), null));
+                            tempOrderData.getPrice(), tempOrderData.getLeavesQty(), tempOrderData.getSide(),
+                            null, instrumentId, tempOrderData.getSymbol()));
                 }
             }
         }
@@ -273,13 +287,15 @@ public class MEOrderBook {
                 logger.info("Order with id: {} has been cancelled because there was no suitable offer.", incomingOrder.getOrderId());
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
                         incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.CANCELLED,
-                        OrderStatus.CANCELLED, incomingOrder.getPrice(), incomingOrder.getLeavesQty(), null, null, incomingOrder.getSide(), null));
+                        OrderStatus.CANCELLED, incomingOrder.getPrice(), incomingOrder.getLeavesQty(),
+                        BigDecimal.ZERO, BigDecimal.ZERO, incomingOrder.getSide(), null, instrumentId, incomingOrder.getSymbol()));
             }
 
             else {
                 collector.add(new MEExecutionReport(generator.getNextExecutionId(), incomingOrder.getClientId(),
                         incomingOrder.getClientOrderId(), incomingOrder.getOrderId(), ExecType.NEW, OrderStatus.NEW,
-                        incomingOrder.getPrice(), incomingOrder.getLeavesQty(), null, null, incomingOrder.getSide(), null));
+                        incomingOrder.getPrice(), incomingOrder.getLeavesQty(), BigDecimal.ZERO, BigDecimal.ZERO,
+                        incomingOrder.getSide(), null, instrumentId, incomingOrder.getSymbol()));
                 logger.info("Order with id: {} was placed to the OrderBook because there was no suitable offer.", incomingOrder.getOrderId());
                 if (incomingOrder.getSide() == OrderSide.BID)
                     bids.add(incomingOrder);
