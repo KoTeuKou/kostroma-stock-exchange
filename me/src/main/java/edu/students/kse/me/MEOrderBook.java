@@ -92,6 +92,12 @@ public class MEOrderBook {
                 stopBids.add(newOrderMessage);
             else
                 stopOffers.add(newOrderMessage);
+
+            collector.add(new MEExecutionReport(generator.getNextExecutionId(), newOrderMessage.getClientId(),
+                    newOrderMessage.getClientOrderId(), newOrderMessage.getOrderId(), ExecType.NEW, OrderStatus.NEW,
+                    newOrderMessage.getStopPrice(), newOrderMessage.getOrderQty(), BigDecimal.ZERO, BigDecimal.ZERO,
+                    newOrderMessage.getSide(), null, instrumentId, newOrderMessage.getSymbol()));
+            logger.info("Order with id: {} was placed to the OrderBook because there was no suitable offer.", newOrderMessage.getOrderId());
         } else {
             // Check for Stop & Stop Limit orders that can be added to Limit orders
             List<MENewOrderMessage> orderMessages = new ArrayList<>();

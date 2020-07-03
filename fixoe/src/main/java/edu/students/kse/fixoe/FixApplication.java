@@ -165,6 +165,7 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
             return null;
         } else if (msg instanceof MEExecutionReport) {
             MEExecutionReport meExecutionReport = (MEExecutionReport) msg;
+            logger.info(msg.toString());
             ExecutionReport executionReport = new ExecutionReport();
             executionReport.set(new ExecID(meExecutionReport.getExecId()));
             executionReport.getHeader().setField(new SenderCompID(meExecutionReport.getClientId()));
@@ -180,7 +181,12 @@ public class FixApplication extends quickfix.fix50sp2.MessageCracker implements 
                 executionReport.set(new TrdMatchID(meExecutionReport.getTradeMatchId()));
             }
             return executionReport;
-        } else {
+        }
+        else if (msg instanceof METradeMessage){
+            logger.info(msg.toString());
+            return null;
+        }
+        else {
             throw new UnsupportedMessageType();
         }
     }
